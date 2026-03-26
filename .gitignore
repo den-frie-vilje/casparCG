@@ -16,8 +16,8 @@ build/
 *.swo
 *~
 
-# Test outputs (rendered files — not tracked)
-tests/output-*/
+# Test outputs (rendered files — not tracked, but keep the directories)
+tests/output-*/*
 !tests/output-*/.gitkeep
 
 # Docker
