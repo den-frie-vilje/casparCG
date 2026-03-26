@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@font-face {
+    font-family: 'JetBrains Mono';
+    src: url('JetBrainsMono-Medium.ttf') format('truetype');
+    font-weight: 500;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    width: 1280px; height: 720px; overflow: hidden;
+    background: transparent;
+    font-family: 'Inter', 'Helvetica Neue', sans-serif;
+}
+#bar {
+    position: absolute; left: 0;
+    width: 1280px; height: 8px;
+    top: 8px;
+}
+#frame {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(calc(-50% + 160px), -50%);
+    font-size: 120px; font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+    color: #39ff14;
+}
+/* Producer title — centered in lower half */
+#producer {
+    position: absolute;
+    bottom: 180px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px; color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+    white-space: nowrap;
+}
+/* Rotating triangle — smaller, centered */
+#triangle-wrap {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px; height: 120px;
+}
+#triangle-svg {
+    width: 120px; height: 120px;
+}
+#triangle-svg polygon {
+    fill: none;
+    stroke: #39ff14;
+    stroke-width: 2;
+    opacity: 0.6;
+}
+/* DFV logo — top-right, action-safe */
+#badge {
+    position: absolute; top: 180px; left: 50%;
+    transform: translateX(-50%);
+    opacity: 1;
+}
+#badge img {
+    height: 40px;
+    display: block;
+}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div id="frame">-</div>
+<div id="producer"></div>
+
+<!-- Rotating triangle (smaller) -->
+<div id="triangle-wrap">
+<svg id="triangle-svg" viewBox="0 0 120 120">
+    <polygon id="tri" points="60,10 110,100 10,100"/>
+</svg>
+</div>
+
+<!-- PNG file loading test — DFV logo -->
+<div id="badge"><img src="dfv_logo.png" alt="den frie vilje"></div>
+
+<script>
+// Deterministic template driven by CasparCG's channel tick.
+//
+// The Ultralight producer injects these globals on each tick:
+//   window.__caspar_frame   — integer frame count since play()
+//   window.__caspar_time    — virtual time in seconds
+//   window.__caspar_playing — true after play()
+//   window.__caspar_tick(f) — called exactly once per channel tick
+//
+// This template does NOT use requestAnimationFrame for timing.
+// All rendering is driven by __caspar_tick which fires exactly
+// once per channel tick — deterministic at any playback speed.
+
+var frameEl    = document.getElementById('frame');
+var barEl      = document.getElementById('bar');
+var producerEl = document.getElementById('producer');
+var triEl      = document.getElementById('tri');
+
+// Triangle vertices at radius 50, centered at (60,60) in the 120x120 viewBox
+var R = 50;
+var CX = 60, CY = 60;
+
+function triPoints(angleDeg) {
+    var a = angleDeg * Math.PI / 180;
+    var pts = [];
+    for (var i = 0; i < 3; i++) {
+        var angle = a + (i * 2 * Math.PI / 3);
+        pts.push(
+            (CX + R * Math.sin(angle)).toFixed(1) + ',' +
+            (CY - R * Math.cos(angle)).toFixed(1)
+        );
+    }
+    return pts.join(' ');
+}
+
+// Called exactly once per channel tick by the Ultralight producer.
+// f = current frame number (0-based after play).
+window.__caspar_tick = function(f) {
+    frameEl.textContent = f;
+
+    // Alternate bar color: even = cyan, odd = yellow
+    barEl.style.background = (f % 2 === 0) ? '#00e5ff' : '#ffea00';
+
+    // Producer name from C++ injection
+    producerEl.textContent = (window.__caspar_producer || 'OVERLAY');
+
+    // Rotate triangle: one full rotation every 250 frames (10s at 25fps)
+    var angle = (f / 250) * 360;
+    triEl.setAttribute('points', triPoints(angle));
+
+    // Blink triangle white for 1 frame every 25 (syncs with video square + audio bleep)
+    var bleep = (f % 25 === 0);
+    triEl.style.stroke = bleep ? 'white' : '#39ff14';
+    triEl.style.strokeWidth = bleep ? '3' : '1.5';
+    triEl.style.opacity = bleep ? '1' : '0.6';
+};
+
+function play()  { }
+function stop()  { }
+function update(data) { }
+function next()  { }
+</script>
+</body>
+</html>

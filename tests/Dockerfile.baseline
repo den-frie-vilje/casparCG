@@ -1,0 +1,48 @@
+# Dockerfile.baseline — Pre-built CasparCG v2.5.0 for reference output
+#
+# Uses the official .deb packages from GitHub Releases.
+# Runs headless via EGL + Mesa llvmpipe (software OpenGL).
+
+FROM --platform=linux/amd64 ubuntu:noble
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Minimal bootstrap: just curl to download the debs
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl ca-certificates
+
+# Download CasparCG v2.5.0 .deb packages
+WORKDIR /tmp
+RUN curl -fSL -o casparcg-cef.deb \
+    "https://github.com/CasparCG/server/releases/download/v2.5.0-stable/casparcg-cef-142_142.0.17.g60aac24%2B2-noble1_amd64.deb" \
+    && curl -fSL -o casparcg-server.deb \
+    "https://github.com/CasparCG/server/releases/download/v2.5.0-stable/casparcg-server-2.5_2.5.0.stable-noble1_amd64.deb"
+
+# Install both debs, then let apt resolve ALL missing deps in one pass.
+# dpkg will fail on unmet deps — that's expected. apt-get -f install fixes it.
+RUN dpkg -i casparcg-cef.deb casparcg-server.deb || true
+RUN apt-get update && apt-get install -f -y \
+    && apt-get install -y --no-install-recommends libgl1-mesa-dri libegl-mesa0 \
+    && rm -f /tmp/casparcg-cef.deb /tmp/casparcg-server.deb \
+    && rm -rf /var/lib/apt/lists/*
+
+# Verify the install worked
+RUN which casparcg-server-2.5 && casparcg-server-2.5 --help 2>&1 | head -5 || true
+
+# Force software rendering (no GPU in Docker on macOS)
+ENV LIBGL_ALWAYS_SOFTWARE=1
+# Unset DISPLAY so CasparCG uses headless EGL path (context.cpp checks getenv("DISPLAY") == nullptr)
+# ENV DISPLAY must not be set at all, not even to empty string
+
+# Create working directories
+RUN mkdir -p /media /output
+
+# The .deb installs config to /usr/share/casparcg-server-2.5/
+# CasparCG reads casparcg.config from its working directory.
+WORKDIR /usr/share/casparcg-server-2.5
+
+# Expose AMCP port
+EXPOSE 5250
+
+# Run CasparCG — binary name from the .deb is "casparcg-server-2.5"
+CMD ["casparcg-server-2.5"]

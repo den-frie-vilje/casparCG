@@ -1,0 +1,31 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+build/
+*.o
+*.a
+*.so
+*.dylib
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Test outputs (rendered files — not tracked)
+tests/output-*/
+!tests/output-*/.gitkeep
+
+# Docker
+*.dmg
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc

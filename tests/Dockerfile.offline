@@ -1,0 +1,147 @@
+# Dockerfile.offline — Build CasparCG from our fork (with offline consumer + CEF)
+#
+# Multi-stage build mirroring tools/linux/Dockerfile.
+# Downloads the CEF SDK (with headers) at cmake configure time.
+# Runs headless via EGL + Mesa llvmpipe (software OpenGL).
+
+FROM --platform=linux/amd64 docker.io/buildpack-deps:noble AS build-casparcg
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install build dependencies (same as tools/linux/install-dependencies)
+RUN apt-get update && apt-get install -yq --no-install-recommends \
+    autoconf \
+    automake \
+    cmake \
+    ninja-build \
+    curl \
+    bzip2 \
+    clang \
+    g++ \
+    gcc \
+    git \
+    gperf \
+    libtool \
+    make \
+    perl \
+    pkg-config \
+    python3 \
+    zlib1g-dev \
+    libexpat1-dev \
+    lsb-release \
+    libglew-dev \
+    libtbb-dev \
+    libopenal-dev \
+    libxcursor-dev \
+    libxinerama-dev \
+    libxi-dev \
+    libsfml-dev \
+    libxrandr-dev \
+    libudev-dev \
+    libglu1-mesa-dev \
+    libgl1-mesa-dev \
+    libegl1-mesa-dev \
+    libboost-all-dev \
+    libnss3-dev \
+    libcups2-dev \
+    libxdamage-dev \
+    libxcomposite-dev \
+    libatk1.0-dev \
+    libatspi2.0-dev \
+    libatk-bridge2.0-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libavdevice-dev \
+    libavutil-dev \
+    libavfilter-dev \
+    libswscale-dev \
+    libswresample-dev \
+    libsimde-dev
+
+RUN mkdir /source && mkdir /build && mkdir /install
+
+# Download Ultralight SDK for synchronous HTML rendering
+RUN apt-get install -yq --no-install-recommends p7zip-full && \
+    curl -fSL -o /tmp/ultralight-sdk.7z \
+    "https://ultralight-sdk.sfo2.cdn.digitaloceanspaces.com/ultralight-sdk-latest-linux-x64.7z" && \
+    mkdir -p /opt/ultralight-sdk && \
+    7z x -y /tmp/ultralight-sdk.7z -o/opt/ultralight-sdk && \
+    rm /tmp/ultralight-sdk.7z
+
+# ARG invalidates cache when source changes
+ARG SOURCE_HASH=unknown
+COPY ./server/src /source
+
+WORKDIR /build
+
+# Build steps split for debuggability. Cache-busted via COPY of source above.
+RUN cmake -GNinja /source \
+    -DUSE_STATIC_BOOST=ON \
+    -DUSE_SYSTEM_CEF=OFF \
+    -DENABLE_HTML=ON \
+    -DENABLE_ULTRALIGHT=ON \
+    -DULTRALIGHT_SDK_PATH=/opt/ultralight-sdk
+
+RUN cmake --build . 2>&1
+
+RUN cmake --install . --prefix /staging
+
+RUN /source/shell/copy_deps.sh /build/shell/casparcg /staging/lib \
+    && cp /opt/ultralight-sdk/bin/*.so /staging/lib/ \
+    && mkdir -p /staging/resources \
+    && (cp -r /opt/ultralight-sdk/resources/* /staging/resources/ 2>/dev/null || true)
+
+# ---------------------------------------------------------------------------
+# Runtime stage
+# ---------------------------------------------------------------------------
+FROM --platform=linux/amd64 docker.io/ubuntu:noble
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+COPY --from=build-casparcg /staging /opt/casparcg
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tzdata \
+    libc++1 \
+    libnss3 \
+    fontconfig \
+    fonts-liberation \
+    libglvnd0 \
+    libgl1 \
+    libglx0 \
+    libegl1 \
+    libgles2 \
+    libglew2.2 \
+    libgl1-mesa-dri \
+    libegl-mesa0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libatk1.0-0t64 \
+    libatk-bridge2.0-0t64 \
+    libatspi2.0-0t64 \
+    libcups2t64 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libgdk-pixbuf-2.0-0 \
+    libgtk-3-0t64 \
+    libasound2t64 \
+    libdbus-1-3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Force software rendering (no GPU in Docker on macOS)
+ENV LIBGL_ALWAYS_SOFTWARE=1
+# Do NOT set DISPLAY — CasparCG checks getenv("DISPLAY") == nullptr to use headless EGL
+
+# Create working directories
+RUN mkdir -p /media /output /templates
+
+WORKDIR /opt/casparcg
+
+# Expose AMCP port
+EXPOSE 5250
+
+# Run casparcg directly (not via run.sh) so SIGTERM reaches the process
+# and triggers graceful shutdown with av_write_trailer().
+ENV LD_LIBRARY_PATH=/opt/casparcg/lib
+CMD ["bin/casparcg"]

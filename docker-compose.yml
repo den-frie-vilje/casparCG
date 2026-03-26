@@ -1,0 +1,47 @@
+# CasparCG Offline Consumer Test Stack
+#
+# Runs two CasparCG instances side-by-side:
+#   - baseline: pre-built v2.5.0 with ffmpeg consumer (real-time reference)
+#   - offline:  our fork with offline consumer (as-fast-as-possible)
+#
+# Both render the same content with the same codec settings.
+# Compare outputs to verify the offline consumer produces correct frames.
+#
+# Usage:
+#   docker compose build
+#   ./docker/test_cef.sh
+
+services:
+  baseline:
+    stop_grace_period: 30s
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.baseline
+    platform: linux/amd64
+    ports:
+      - "5250:5250"
+    volumes:
+      - ./docker/config/baseline.config:/usr/share/casparcg-server-2.5/casparcg.config:ro
+      - ./docker/media:/media:ro
+      - ./docker/templates:/templates
+      - ./docker/output-baseline:/output
+    environment:
+      - LIBGL_ALWAYS_SOFTWARE=1
+      - EGL_PLATFORM=surfaceless
+
+  offline:
+    stop_grace_period: 30s
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.offline
+    platform: linux/amd64
+    ports:
+      - "5251:5250"
+    volumes:
+      - ./docker/config/offline.config:/opt/casparcg/casparcg.config:ro
+      - ./docker/media:/media:ro
+      - ./docker/templates:/templates
+      - ./docker/output-offline:/output
+    environment:
+      - LIBGL_ALWAYS_SOFTWARE=1
+      - EGL_PLATFORM=surfaceless
