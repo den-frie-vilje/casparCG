@@ -1,9 +1,8 @@
 # Agent Notes — CasparCG Offline Rendering
 
 > **This file must be kept current.** Update it whenever you discover a new
-> workaround, gotcha, or architectural decision. Also keep `docs/architecture.md`,
-> `docs/offline-rendering.md`, `docs/ultralight-producer.md`, and `README.md` in
-> sync with any changes.
+> workaround, gotcha, or architectural decision. Also keep the docs in `docs/`
+> and `README.md` in sync with any changes.
 
 ---
 
@@ -189,9 +188,9 @@ This causes `env: bash\r: No such file or directory`.
 
 ### Font availability
 
-The test video uses JetBrains Mono for monospaced frame counters. The font must be
-downloaded to `/tmp/jetbrains-mono/` before running `generate_sync_test.sh`.
-Inter is used for UI labels and must be at `/tmp/inter-font/`.
+Fonts (JetBrains Mono, Inter) are downloaded by `tests/download_fonts.sh` into
+`tests/fonts/` and copied to `tests/templates/` for Docker. The video generator
+(`tests/generate_test_media.sh`) runs the download automatically if fonts are missing.
 
 ### ffmpeg pan filter limitations
 
@@ -238,12 +237,16 @@ REMOVE 1 FILE /output/file.mp4
 | CEF frame injection | `server/src/modules/html/producer/html_producer.cpp` |
 | Docker build | `tests/Dockerfile.offline` |
 | CasparCG config | `tests/config/offline.config` |
-| Test video generator | `tests/generate_sync_test.sh` |
+| Test video generator | `tests/generate_test_media.sh` |
 | Matrix benchmark | `tests/test_matrix.sh` |
+| Precise render test | `tests/test_precise_render.sh` |
+| Font downloader | `tests/download_fonts.sh` |
 | Overlay template | `tests/templates/sync_test.html` |
-| Architecture docs | `server/docs/architecture.md` |
-| Offline rendering docs | `server/docs/offline-rendering.md` |
-| Ultralight docs | `server/docs/ultralight-producer.md` |
+| Architecture docs | `docs/architecture.md` |
+| Offline rendering docs | `docs/offline-rendering.md` |
+| Ultralight docs | `docs/ultralight-producer.md` |
+| GPU on macOS docs | `docs/gpu-acceleration-macos-docker.md` |
+| Vulkan migration docs | `docs/ultralight-vulkan-migration.md` |
 
 ---
 
@@ -306,7 +309,7 @@ Follow these conventions in all new code to match the existing codebase.
 ```
 /*
  * Copyright (c) 2011 Sveriges Television AB <info@casparcg.com>
- * Copyright (c) 2025 Den Frie Vilje ApS <hej@denfrievilje.dk>
+ * Copyright (c) 2026 Den Frie Vilje ApS <hej@denfrievilje.dk>
  * ... GPL v3 boilerplate ...
  * Author: Name, email
  */
