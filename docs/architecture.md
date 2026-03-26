@@ -29,47 +29,35 @@ CasparCG Server is organised into six top-level source directories, each with a
 well-defined responsibility boundary.
 
 ```mermaid
-graph LR
-    subgraph control["Control"]
-        SHELL[shell/\nConfig + Bootstrap]
-        AMCP[protocol/\nAMCP + OSC]
-    end
+graph TD
+    SHELL[shell/ Config + Bootstrap]
+    AMCP[protocol/ AMCP + OSC]
 
-    subgraph pipeline["Channel Pipeline (core/)"]
-        direction LR
-        STAGE[stage\nLayers] --> MIXER[mixer] --> OUTPUT[output]
-    end
+    SHELL --> STAGE
+    AMCP --> STAGE
 
-    subgraph gpu["GPU (accelerator/)"]
-        OGL[ogl::device\nimage_mixer]
-    end
-
-    subgraph producers["Producers (modules/)"]
-        direction TB
+    subgraph producers["Producers modules/"]
         FFPROD[FFmpeg]
         HTMLPROD[HTML / CEF]
         ULPROD[Ultralight]
         IMGPROD[Image / Color]
     end
 
-    subgraph consumers["Consumers (modules/)"]
-        direction TB
+    producers --> STAGE
+
+    STAGE[core/stage Layers]
+    STAGE --> MIXER[core/mixer]
+    MIXER --> OGL[accelerator/ ogl::device + image_mixer]
+    OGL --> OUTPUT[core/output]
+
+    subgraph consumers["Consumers modules/"]
         FFCONS[FFmpeg file]
         OFFCONS[Offline]
         DECK[Decklink SDI]
         SCREEN[Screen]
     end
 
-    COMMON[common/\nThreading, logging, memory]
-
-    SHELL --> pipeline
-    AMCP --> pipeline
-    producers --> STAGE
-    MIXER --> OGL
     OUTPUT --> consumers
-    COMMON -.-> pipeline
-    COMMON -.-> producers
-    COMMON -.-> consumers
 ```
 
 ### Directory responsibilities
