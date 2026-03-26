@@ -38,33 +38,34 @@ graph TD
         AMCP[AMCP + OSC]
     end
 
-    subgraph MP["modules/ — producers"]
-        FFPROD[FFmpeg]
-        HTMLPROD[HTML / CEF]
-        ULPROD[Ultralight]
-        IMGPROD[Image / Color]
+    subgraph MP["modules/"]
+        FFPROD[FFmpeg producer]
+        HTMLPROD[HTML / CEF producer]
+        ULPROD[Ultralight producer]
+        IMGPROD[Image / Color producer]
     end
 
-    S --> C
-    P --> C
-    MP --> C
+    S --> STAGE
+    P --> STAGE
+    MP --> STAGE
 
     subgraph C["core/"]
-        STAGE[stage — Layers] --> MIXER[mixer]
+        STAGE[stage — Layers]
+        STAGE --> MIXER[mixer]
+        MIXER --> OUTPUT[output]
     end
+
+    MIXER -.-> OGL
 
     subgraph A["accelerator/"]
         OGL[ogl::device + image_mixer]
     end
 
-    MIXER --> OGL
-    OGL --> OUTPUT[core/output]
-
-    subgraph MC["modules/ — consumers"]
-        FFCONS[FFmpeg file]
-        OFFCONS[Offline]
-        DECK[Decklink SDI]
-        SCREEN[Screen]
+    subgraph MC["modules/"]
+        FFCONS[FFmpeg file consumer]
+        OFFCONS[Offline consumer]
+        DECK[Decklink SDI consumer]
+        SCREEN[Screen consumer]
     end
 
     OUTPUT --> MC
