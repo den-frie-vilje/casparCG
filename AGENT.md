@@ -342,7 +342,7 @@ All mermaid diagrams in docs must follow this color scheme and include the
 ### Flowchart/graph template
 
 ```
-%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter', 'edgeLabelBackground': '#FFF9E6', 'lineColor': '#666' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif', 'edgeLabelBackground': '#FFF9E6', 'lineColor': '#666' }}}%%
 graph TD
     classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
     classDef moduleNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
@@ -359,7 +359,7 @@ graph TD
 
 ```
 %%{init: {'theme': 'base', 'themeVariables': {
-    'fontFamily': 'Inter',
+    'fontFamily': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif',
     'actorBkg': '#0055FF', 'actorTextColor': '#FFF', 'actorBorder': '#0055FF',
     'activationBkgColor': '#E8F0FE', 'activationBorderColor': '#0055FF',
     'signalColor': '#333', 'signalTextColor': '#333',
