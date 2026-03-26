@@ -13,24 +13,24 @@ PORT=5252
 DOCKER="${DOCKER:-/usr/local/bin/docker}"
 
 ffprobe_cmd() {
-    if command -v ffprobe > /dev/null 2>&1; then
-        ffprobe "$@"
+    if [ -x /opt/homebrew/bin/pkgx ]; then
+        /opt/homebrew/bin/pkgx ffprobe "$@"
     elif command -v pkgx > /dev/null 2>&1; then
         pkgx ffprobe "$@"
-    elif [ -x /opt/homebrew/bin/pkgx ]; then
-        /opt/homebrew/bin/pkgx ffprobe "$@"
+    elif command -v ffprobe > /dev/null 2>&1; then
+        ffprobe "$@"
     else
         echo "Error: ffprobe not found. Install ffmpeg or pkgx." >&2
         return 1
     fi
 }
 ffmpeg_cmd() {
-    if command -v ffmpeg > /dev/null 2>&1; then
-        ffmpeg "$@"
+    if [ -x /opt/homebrew/bin/pkgx ]; then
+        /opt/homebrew/bin/pkgx ffmpeg "$@"
     elif command -v pkgx > /dev/null 2>&1; then
         pkgx ffmpeg "$@"
-    elif [ -x /opt/homebrew/bin/pkgx ]; then
-        /opt/homebrew/bin/pkgx ffmpeg "$@"
+    elif command -v ffmpeg > /dev/null 2>&1; then
+        ffmpeg "$@"
     else
         echo "Error: ffmpeg not found. Install ffmpeg or pkgx." >&2
         return 1
