@@ -32,11 +32,11 @@ well-defined responsibility boundary.
 graph TD
     classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
     classDef moduleNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
-    classDef gpuNode fill:#3377FF,color:#FFF,stroke:#0055FF,stroke-width:2px
+    classDef gpuNode fill:#7B5EA7,color:#FFF,stroke:#634A8C,stroke-width:2px
     classDef ctrlNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
     classDef sgCore stroke:#0055FF,fill:#FFF,color:#0055FF,stroke-width:2px
     classDef sgModule stroke:#1AAF1A,fill:#FFF,color:#1AAF1A,stroke-width:2px
-    classDef sgGpu stroke:#0055FF,fill:#EEF,color:#0055FF,stroke-width:2px
+    classDef sgGpu stroke:#7B5EA7,fill:#F3EFF8,color:#7B5EA7,stroke-width:2px
     classDef sgCtrl stroke:#666,fill:#FFF,color:#666,stroke-width:2px
 
     subgraph S["shell/"]
@@ -175,11 +175,11 @@ the frame pipeline.
 graph LR
     classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
     classDef moduleNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
-    classDef gpuNode fill:#3377FF,color:#FFF,stroke:#0055FF,stroke-width:2px
+    classDef gpuNode fill:#7B5EA7,color:#FFF,stroke:#634A8C,stroke-width:2px
     classDef ctrlNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
     classDef sgCore stroke:#0055FF,fill:#FFF,stroke-width:2px
     classDef sgModule stroke:#1AAF1A,fill:#FFF,stroke-width:2px
-    classDef sgGpu stroke:#0055FF,fill:#EEF,stroke-width:2px
+    classDef sgGpu stroke:#7B5EA7,fill:#F3EFF8,stroke-width:2px
     classDef sgCtrl stroke:#666,fill:#FFF,stroke-width:2px
 
     subgraph Main
@@ -367,9 +367,9 @@ decoupled from the core through the `image_mixer` interface.
 ```mermaid
 flowchart TB
     classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
-    classDef gpuNode fill:#3377FF,color:#FFF,stroke:#0055FF,stroke-width:2px
+    classDef gpuNode fill:#7B5EA7,color:#FFF,stroke:#634A8C,stroke-width:2px
     classDef sgCore stroke:#0055FF,fill:#FFF,stroke-width:2px
-    classDef sgGpu stroke:#0055FF,fill:#EEF,stroke-width:2px
+    classDef sgGpu stroke:#7B5EA7,fill:#F3EFF8,stroke-width:2px
 
     subgraph Channel["Channel Tick"]
         MIX[Mixer]:::coreNode
