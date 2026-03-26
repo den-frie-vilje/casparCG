@@ -30,9 +30,9 @@ well-defined responsibility boundary.
 
 ```mermaid
 graph TD
-    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
-    classDef moduleNode fill:#FFF,color:#1AAF1A,stroke:#1AAF1A,stroke-width:4px
-    classDef gpuNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:2px
+    classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
+    classDef moduleNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
+    classDef gpuNode fill:#3377FF,color:#FFF,stroke:#0055FF,stroke-width:2px
     classDef ctrlNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
     classDef sgCore stroke:#0055FF,fill:#FFF,color:#0055FF,stroke-width:2px
     classDef sgModule stroke:#1AAF1A,fill:#FFF,color:#1AAF1A,stroke-width:2px
@@ -173,9 +173,9 @@ the frame pipeline.
 
 ```mermaid
 graph LR
-    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
-    classDef moduleNode fill:#FFF,color:#1AAF1A,stroke:#1AAF1A,stroke-width:4px
-    classDef gpuNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:2px
+    classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
+    classDef moduleNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
+    classDef gpuNode fill:#3377FF,color:#FFF,stroke:#0055FF,stroke-width:2px
     classDef ctrlNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
     classDef sgCore stroke:#0055FF,fill:#FFF,stroke-width:2px
     classDef sgModule stroke:#1AAF1A,fill:#FFF,stroke-width:2px
@@ -255,9 +255,9 @@ connect via TCP and send text commands.
 
 ```mermaid
 flowchart TD
-    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
-    classDef protoNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
-    classDef clientNode fill:#FFF,color:#666,stroke:#666,stroke-width:2px
+    classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
+    classDef protoNode fill:#555,color:#FFF,stroke:#333,stroke-width:2px
+    classDef clientNode fill:#999,color:#FFF,stroke:#666,stroke-width:2px
 
     CLIENT[TCP Client]:::clientNode
     CLIENT -->|text command| STRAT[AMCPProtocolStrategy]:::protoNode
@@ -305,8 +305,8 @@ registers its factories at startup via dependency injection.
 
 ```mermaid
 flowchart TB
-    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
-    classDef moduleNode fill:#FFF,color:#1AAF1A,stroke:#1AAF1A,stroke-width:4px
+    classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
+    classDef moduleNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
     classDef ctrlNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
     classDef sgStartup stroke:#1AAF1A,fill:#FFF,stroke-width:2px
     classDef sgRuntime stroke:#0055FF,fill:#FFF,stroke-width:2px
@@ -366,8 +366,8 @@ decoupled from the core through the `image_mixer` interface.
 
 ```mermaid
 flowchart TB
-    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
-    classDef gpuNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:2px
+    classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
+    classDef gpuNode fill:#3377FF,color:#FFF,stroke:#0055FF,stroke-width:2px
     classDef sgCore stroke:#0055FF,fill:#FFF,stroke-width:2px
     classDef sgGpu stroke:#0055FF,fill:#EEF,stroke-width:2px
 
@@ -623,9 +623,9 @@ throttled only by backpressure from a bounded frame queue.
 
 ```mermaid
 flowchart TB
-    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
-    classDef moduleNode fill:#FFF,color:#1AAF1A,stroke:#1AAF1A,stroke-width:4px
-    classDef diskNode fill:#FFF,color:#CC9900,stroke:#CC9900,stroke-width:4px
+    classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
+    classDef moduleNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
+    classDef diskNode fill:#CC9900,color:#FFF,stroke:#AA7700,stroke-width:2px
 
     STAGE[Stage]:::coreNode --> MIXER[Mixer]:::coreNode
     MIXER --> SEND["offline_consumer::send()"]:::moduleNode
@@ -659,10 +659,10 @@ to `receive_impl()` produces exactly one fresh frame.
 
 ```mermaid
 flowchart TD
-    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
-    classDef cefNode fill:#FFF,color:#666,stroke:#666,stroke-width:2px
-    classDef ulNode fill:#FFF,color:#1AAF1A,stroke:#1AAF1A,stroke-width:4px
-    classDef warnNode fill:#FFF,color:#CC9900,stroke:#CC9900,stroke-width:4px
+    classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
+    classDef cefNode fill:#888,color:#FFF,stroke:#666,stroke-width:2px
+    classDef ulNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
+    classDef warnNode fill:#CC9900,color:#FFF,stroke:#AA7700,stroke-width:2px
     classDef sgCef stroke:#666,fill:#FFF,stroke-width:2px
     classDef sgUl stroke:#1AAF1A,fill:#FFF,stroke-width:2px
 
