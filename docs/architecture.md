@@ -30,34 +30,44 @@ well-defined responsibility boundary.
 
 ```mermaid
 graph TD
-    SHELL["**shell/** Config + Bootstrap"]
-    AMCP["**protocol/** AMCP + OSC"]
+    subgraph S["shell/"]
+        SHELL[Config + Bootstrap]
+    end
 
-    SHELL --> STAGE
-    AMCP --> STAGE
+    subgraph P["protocol/"]
+        AMCP[AMCP + OSC]
+    end
 
-    subgraph producers["Producers **modules/**"]
+    subgraph MP["modules/ — producers"]
         FFPROD[FFmpeg]
         HTMLPROD[HTML / CEF]
         ULPROD[Ultralight]
         IMGPROD[Image / Color]
     end
 
-    producers --> STAGE
+    S --> C
+    P --> C
+    MP --> C
 
-    STAGE["**core/** stage — Layers"]
-    STAGE --> MIXER["**core/** mixer"]
-    MIXER --> OGL["**accelerator/** ogl::device + image_mixer"]
-    OGL --> OUTPUT["**core/** output"]
+    subgraph C["core/"]
+        STAGE[stage — Layers] --> MIXER[mixer]
+    end
 
-    subgraph consumers["Consumers **modules/**"]
+    subgraph A["accelerator/"]
+        OGL[ogl::device + image_mixer]
+    end
+
+    MIXER --> OGL
+    OGL --> OUTPUT[core/output]
+
+    subgraph MC["modules/ — consumers"]
         FFCONS[FFmpeg file]
         OFFCONS[Offline]
         DECK[Decklink SDI]
         SCREEN[Screen]
     end
 
-    OUTPUT --> consumers
+    OUTPUT --> MC
 ```
 
 ### Directory responsibilities
