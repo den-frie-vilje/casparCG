@@ -150,19 +150,9 @@ run_test() {
         cons_cmd="ADD 1 FILE /output/${filename}.mp4 -codec:v libx264 -preset:v ultrafast -crf:v 18 -codec:a aac -filter:a pan=stereo|c0=c0|c1=c1"
     fi
 
-    # Atomic start
-    local batch_cmds
-    if [ "$prod" = "cef" ]; then
-        batch_cmds="['BEGIN','PLAY 1-1','${cons_cmd}','COMMIT']"
-    else
-        batch_cmds="['BEGIN','PLAY 1-1','CG 1-10 PLAY 0','${cons_cmd}','COMMIT']"
-    fi
-    amcp_batch "$batch_cmds"
-
-    # Render + flush: measure total wall-clock including I/O.
-    # Uses a persistent AMCP connection for precise polling (no TCP overhead).
-    # Detects video end via <time> reaching duration (same as test_precise_render).
-    # Issues REMOVE on the same connection for zero-latency flush.
+    # Atomic start + precise timing.
+    # Timer starts immediately BEFORE BEGIN (COMMIT blocks until commands execute,
+    # so frames are already flowing by the time COMMIT returns).
     local wall_ms
     local mp4_path="$OUTPUT_DIR/${filename}.mp4"
     local remove_cmd
@@ -172,12 +162,20 @@ run_test() {
         remove_cmd="REMOVE 1 FILE /output/${filename}.mp4"
     fi
 
+    local batch_cmds
+    if [ "$prod" = "cef" ]; then
+        batch_cmds="BEGIN,PLAY 1-1,${cons_cmd},COMMIT"
+    else
+        batch_cmds="BEGIN,PLAY 1-1,CG 1-10 PLAY 0,${cons_cmd},COMMIT"
+    fi
+
     wall_ms=$(python3 << PYEOF
 import socket, time, re, os, sys
 
 PORT = $PORT
 src_duration = float($duration)
 remove_cmd = "$remove_cmd"
+batch = "$batch_cmds".split(",")
 
 def amcp_session():
     s = socket.socket()
@@ -185,7 +183,21 @@ def amcp_session():
     s.connect(('localhost', PORT))
     return s
 
+# Send BEGIN/COMMIT batch with timer starting BEFORE BEGIN
+s = amcp_session()
 t0 = time.monotonic()
+for cmd in batch:
+    s.send((cmd.strip() + '\r\n').encode())
+    time.sleep(0.15)
+# Read COMMIT response (all results)
+time.sleep(0.5)
+try: resp = s.recv(16384).decode(errors='replace')
+except: resp = ''
+s.close()
+for line in resp.strip().split('\n'):
+    line = line.strip()
+    if line and not line.startswith('200 '):
+        print('      ', line, file=sys.stderr)
 
 # Poll with persistent connection until video time reaches duration
 poll = amcp_session()

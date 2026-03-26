@@ -159,8 +159,11 @@ def amcp(cmd):
     s.close()
     return r
 
-# Atomic start: video + template + consumer all begin on the same tick
+# Atomic start: video + template + consumer all begin on the same tick.
+# Timer starts BEFORE BEGIN — COMMIT blocks until commands execute,
+# so frames are already flowing by the time it returns.
 s = amcp_session()
+t0 = time.monotonic()
 send(s, 'BEGIN')
 send(s, 'PLAY 1-1')
 send(s, 'CG 1-10 PLAY 0')
@@ -175,8 +178,6 @@ s.close()
 
 # Poll until the video reaches its last frame (time == duration).
 # Use a PERSISTENT connection to avoid TCP overhead per poll.
-# CasparCG keeps the AMCP connection open and responds to each command.
-t0 = time.monotonic()
 src_duration = float("$SRC_DURATION")
 done = False
 
