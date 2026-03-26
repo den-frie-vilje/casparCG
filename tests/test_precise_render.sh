@@ -172,18 +172,23 @@ def amcp(cmd):
 # Atomic start: video + template + consumer all begin on the same tick.
 # Timer starts BEFORE BEGIN — COMMIT blocks until commands execute,
 # so frames are already flowing by the time it returns.
+# Send all commands without waiting for individual responses (they're
+# queued inside the transaction), then drain all responses after COMMIT.
 s = amcp_session()
 t0 = time.monotonic()
-send(s, 'BEGIN')
-send(s, 'PLAY 1-1')
-send(s, 'CG 1-10 PLAY 0')
-send(s, 'ADD 1 OFFLINE /output/precise_render.mp4 -codec:v libx264 -preset:v ultrafast -crf:v 18 -codec:a aac -filter:a pan=stereo|c0=c0|c1=c1')
-s.send(b'COMMIT\r\n')
-time.sleep(1)
-try:
-    s.recv(16384)
-except:
-    pass
+for cmd in [
+    'BEGIN',
+    'PLAY 1-1',
+    'CG 1-10 PLAY 0',
+    'ADD 1 OFFLINE /output/precise_render.mp4 -codec:v libx264 -preset:v ultrafast -crf:v 18 -codec:a aac -filter:a pan=stereo|c0=c0|c1=c1',
+    'COMMIT',
+]:
+    s.send((cmd + '\r\n').encode())
+    time.sleep(0.05)
+# Drain all responses
+time.sleep(0.5)
+try: s.recv(16384)
+except: pass
 s.close()
 
 # Poll until the video reaches its last frame (time == duration).
