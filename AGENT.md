@@ -317,3 +317,62 @@ Follow these conventions in all new code to match the existing codebase.
 - `boost::algorithm::string` for string ops
 - `std::mutex`, `std::thread`, `std::atomic`, `std::optional` from stdlib
 - `u8()` / `u16()` from `common/utf.h` for string conversion
+
+---
+
+## Mermaid Diagram Styling
+
+All mermaid diagrams in docs must follow this color scheme and include the
+`%%{init}%%` block. Font is Inter.
+
+### Color palette
+
+| Color | Hex | Semantic | Used for |
+|-------|-----|----------|----------|
+| Blue | `#0055FF` | Core pipeline | stage, mixer, output, channels |
+| Violet | `#7B5EA7` | GPU/accelerator | ogl::device, shaders, PBOs |
+| Green | `#1AAF1A` | Modules/plugins | producers, consumers, Ultralight |
+| Gold | `#CC9900` | Warning/caution | non-deterministic, disk I/O |
+| Grey | `#555`-`#999` | Control/infra | shell, protocol, AMCP, CEF, clients |
+| Warm yellow | `#FFF9E6` | Edge labels / notes | arrow labels, sequence notes |
+
+### Flowchart/graph template
+
+```
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter', 'edgeLabelBackground': '#FFF9E6', 'lineColor': '#666' }}}%%
+graph TD
+    classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
+    classDef moduleNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
+    classDef gpuNode fill:#7B5EA7,color:#FFF,stroke:#7B5EA7,stroke-width:2px
+    classDef ctrlNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
+    classDef warnNode fill:#CC9900,color:#FFF,stroke:#AA7700,stroke-width:2px
+    classDef sgCore stroke:#0055FF,fill:#FFF,color:#0055FF,stroke-width:2px
+    classDef sgModule stroke:#1AAF1A,fill:#FFF,color:#1AAF1A,stroke-width:2px
+    classDef sgGpu stroke:#7B5EA7,fill:#F3EFF8,color:#7B5EA7,stroke-width:2px
+    classDef sgCtrl stroke:#666,fill:#FFF,color:#666,stroke-width:2px
+```
+
+### Sequence diagram template
+
+```
+%%{init: {'theme': 'base', 'themeVariables': {
+    'fontFamily': 'Inter',
+    'actorBkg': '#0055FF', 'actorTextColor': '#FFF', 'actorBorder': '#0055FF',
+    'activationBkgColor': '#E8F0FE', 'activationBorderColor': '#0055FF',
+    'signalColor': '#333', 'signalTextColor': '#333',
+    'noteBkgColor': '#FFF9E6', 'noteBorderColor': '#CC9900', 'noteTextColor': '#333',
+    'loopTextColor': '#0055FF'
+}}}%%
+```
+
+Use `'loopTextColor': '#1AAF1A'` for loops related to offline/module behavior.
+
+### Rules
+
+- All nodes use solid fills with white text (not outlined/hollow)
+- Subgraph borders use the lighter version of their node color
+- Subgraph fill is white or very light tint (e.g. `#F3EFF8` for GPU)
+- Edge labels get warm yellow background (`#FFF9E6`)
+- Lines are grey (`#666`), not black
+- Assign `classDef` semantically (blue=core, green=module, etc.), not aesthetically
+- Every diagram must have the `%%{init}%%` block with `fontFamily: 'Inter'`
