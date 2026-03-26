@@ -129,25 +129,27 @@ start_server() {
 }
 
 # ── Run a single render ──────────────────────────────────────────────────────
-# Args: $1=label $2=filename $3=producer_type(cef|ul) $4=consumer_type(ffmpeg|offline)
+# Args: $1=label $2=filename $3=producer_type(cef|ul|none) $4=consumer_type(ffmpeg|offline)
 run_test() {
     local label="$1" filename="$2" prod="$3" cons="$4"
     local duration=20 target=500
 
-    step "[$TEST_NUM/4]" "$label"
+    step "[$TEST_NUM/$TOTAL_TESTS]" "$label"
 
     start_server
 
     # Load video in preview mode (paused at frame 0)
     amcp "LOAD 1-1 sync_test" > /dev/null
 
-    # Load template via the right producer
+    # Load template via the right producer (or skip for video-only)
     if [ "$prod" = "cef" ]; then
         amcp "PLAY 1-20 [HTML] sync_test" > /dev/null
         info "Template: CEF (via [HTML] prefix)"
-    else
+    elif [ "$prod" = "ul" ]; then
         amcp "CG 1-10 ADD 0 sync_test 0" > /dev/null
         info "Template: Ultralight (via CG registry)"
+    else
+        info "Video only (no template)"
     fi
 
     sleep 4
@@ -175,8 +177,10 @@ run_test() {
     local batch_cmds
     if [ "$prod" = "cef" ]; then
         batch_cmds="BEGIN,PLAY 1-1,${cons_cmd},COMMIT"
-    else
+    elif [ "$prod" = "ul" ]; then
         batch_cmds="BEGIN,PLAY 1-1,CG 1-10 PLAY 0,${cons_cmd},COMMIT"
+    else
+        batch_cmds="BEGIN,PLAY 1-1,${cons_cmd},COMMIT"
     fi
 
     wall_ms=$(python3 << PYEOF
@@ -288,17 +292,20 @@ PYEOF
 # ── Phase 1: Render ──────────────────────────────────────────────────────────
 declare -a RESULTS=()
 TEST_NUM=1
+TOTAL_TESTS=5
 
-echo -e "  ${DIM}Phase 1: Rendering (4 sequential tests)${RST}"
+echo -e "  ${DIM}Phase 1: Rendering ($TOTAL_TESTS sequential tests)${RST}"
 echo ""
 
-run_test "CEF + FFmpeg"        "ch1_cef_ffmpeg"   cef     ffmpeg
+run_test "Video only + Offline" "ch0_video_offline" none    offline
 echo ""
-run_test "CEF + Offline"       "ch2_cef_offline"  cef     offline
+run_test "CEF + FFmpeg"         "ch1_cef_ffmpeg"    cef     ffmpeg
 echo ""
-run_test "Ultralight + FFmpeg"  "ch3_ul_ffmpeg"    ul      ffmpeg
+run_test "CEF + Offline"        "ch2_cef_offline"   cef     offline
 echo ""
-run_test "Ultralight + Offline" "ch4_ul_offline"   ul      offline
+run_test "Ultralight + FFmpeg"  "ch3_ul_ffmpeg"     ul      ffmpeg
+echo ""
+run_test "Ultralight + Offline" "ch4_ul_offline"    ul      offline
 
 # Audio is already stereo via -filter:a pan=stereo|c0=c0|c1=c1 in the AMCP ADD command.
 
