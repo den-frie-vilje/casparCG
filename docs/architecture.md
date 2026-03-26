@@ -385,28 +385,28 @@ eliminates GL context threading issues.
 CasparCG supports a wide range of broadcast video formats, described by the
 `video_format_desc` structure.
 
-```mermaid
-graph LR
-    subgraph video_format_desc
-        W[width]
-        H[height]
-        FC[field_count — 1 or 2]
-        FPS[fps — frames/sec]
-        HZ[hz — fields/sec]
-        FR[framerate — rational]
-        AC[audio_cadence]
-    end
+**`video_format_desc` fields:**
 
-    subgraph Formats["Supported Formats"]
-        PAL[PAL 720x576i 25fps]
-        NTSC[NTSC 720x486i 29.97fps]
-        HD720[720p 50/59.94fps]
-        HD1080i[1080i 25/29.97fps]
-        HD1080p[1080p 25/29.97/50/59.94fps]
-        UHD[2160p 25/29.97/50/59.94fps]
-        DCI4K[4K DCI 23.98/24/25fps]
-    end
-```
+| Field           | Type         | Description                                 |
+|-----------------|--------------|---------------------------------------------|
+| `width`         | int          | Horizontal resolution                       |
+| `height`        | int          | Vertical resolution                         |
+| `field_count`   | int          | 1 (progressive) or 2 (interlaced)           |
+| `fps`           | double       | Frames per second                           |
+| `hz`            | double       | Fields per second (= fps x field_count)     |
+| `framerate`     | rational     | Exact fraction (e.g. 30000/1001)            |
+| `audio_cadence` | vector\<int> | Repeating per-frame sample counts           |
+
+**Supported formats:**
+
+| Family   | Resolutions              | Frame rates                    |
+|----------|--------------------------|--------------------------------|
+| SD       | 720x576i, 720x486i       | PAL 25, NTSC 29.97            |
+| 720p     | 1280x720                 | 50, 59.94                     |
+| 1080i    | 1920x1080                | 25, 29.97                     |
+| 1080p    | 1920x1080                | 23.98, 24, 25, 29.97, 50, 59.94 |
+| 2160p    | 3840x2160                | 23.98, 24, 25, 29.97, 50, 59.94 |
+| 4K DCI   | 4096x2160                | 23.98, 24, 25                 |
 
 ### Interlaced vs. progressive
 
