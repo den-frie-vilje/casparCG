@@ -29,63 +29,47 @@ CasparCG Server is organised into six top-level source directories, each with a
 well-defined responsibility boundary.
 
 ```mermaid
-graph TB
-    subgraph shell["shell/ — Application Entry Point"]
-        CONFIG[Config Parser]
-        BOOT[Server Bootstrap]
+graph LR
+    subgraph control["Control"]
+        SHELL[shell/\nConfig + Bootstrap]
+        AMCP[protocol/\nAMCP + OSC]
     end
 
-    subgraph protocol["protocol/ — AMCP + OSC"]
-        AMCP[AMCP Command Parser]
-        OSC[OSC Feedback]
+    subgraph pipeline["Channel Pipeline (core/)"]
+        direction LR
+        STAGE[stage\nLayers] --> MIXER[mixer] --> OUTPUT[output]
     end
 
-    subgraph core["core/ — Domain Logic"]
-        CHANNEL[video_channel]
-        STAGE[stage — Layer Management]
-        MIXER[mixer — Frame Mixing]
-        OUTPUT[output — Consumer Distribution]
-        PROD_IF[frame_producer Interface]
-        CONS_IF[frame_consumer Interface]
+    subgraph gpu["GPU (accelerator/)"]
+        OGL[ogl::device\nimage_mixer]
     end
 
-    subgraph accelerator["accelerator/ — GPU"]
-        OGL[ogl::device — GL Context]
-        IMG_MIX[image_mixer — Compositing]
+    subgraph producers["Producers (modules/)"]
+        direction TB
+        FFPROD[FFmpeg]
+        HTMLPROD[HTML / CEF]
+        ULPROD[Ultralight]
+        IMGPROD[Image / Color]
     end
 
-    subgraph modules["modules/ — Plugins"]
-        FFMPEG[FFmpeg]
-        DECKLINK[Decklink]
-        HTML[HTML / CEF]
-        UL[Ultralight]
+    subgraph consumers["Consumers (modules/)"]
+        direction TB
+        FFCONS[FFmpeg file]
+        OFFCONS[Offline]
+        DECK[Decklink SDI]
         SCREEN[Screen]
-        OFFLINE[Offline Consumer]
     end
 
-    subgraph common["common/ — Shared Utilities"]
-        EXEC[executor — Thread MPSC]
-        LOG[Logging]
-        MEM[Memory Pools]
-        DIAG[Diagnostics]
-    end
+    COMMON[common/\nThreading, logging, memory]
 
-    BOOT --> CHANNEL
-    AMCP --> CHANNEL
-    CHANNEL --> STAGE
-    CHANNEL --> MIXER
-    CHANNEL --> OUTPUT
-    STAGE --> PROD_IF
-    OUTPUT --> CONS_IF
-    MIXER --> IMG_MIX
-    IMG_MIX --> OGL
-    FFMPEG -.->|implements| PROD_IF
-    FFMPEG -.->|implements| CONS_IF
-    DECKLINK -.->|implements| CONS_IF
-    HTML -.->|implements| PROD_IF
-    UL -.->|implements| PROD_IF
-    SCREEN -.->|implements| CONS_IF
-    OFFLINE -.->|implements| CONS_IF
+    SHELL --> pipeline
+    AMCP --> pipeline
+    producers --> STAGE
+    MIXER --> OGL
+    OUTPUT --> consumers
+    COMMON -.-> pipeline
+    COMMON -.-> producers
+    COMMON -.-> consumers
 ```
 
 ### Directory responsibilities
