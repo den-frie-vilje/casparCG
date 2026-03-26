@@ -30,19 +30,28 @@ well-defined responsibility boundary.
 
 ```mermaid
 graph TD
+    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
+    classDef moduleNode fill:#FFF,color:#0D7A0D,stroke:#0D7A0D,stroke-width:4px
+    classDef gpuNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:2px
+    classDef ctrlNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
+    classDef sgCore stroke:#0055FF,fill:#FFF,color:#0055FF,stroke-width:2px
+    classDef sgModule stroke:#0D7A0D,fill:#FFF,color:#0D7A0D,stroke-width:2px
+    classDef sgGpu stroke:#0055FF,fill:#EEF,color:#0055FF,stroke-width:2px
+    classDef sgCtrl stroke:#666,fill:#FFF,color:#666,stroke-width:2px
+
     subgraph S["shell/"]
-        SHELL[Config + Bootstrap]
+        SHELL[Config + Bootstrap]:::ctrlNode
     end
 
     subgraph P["protocol/"]
-        AMCP[AMCP + OSC]
+        AMCP[AMCP + OSC]:::ctrlNode
     end
 
-    subgraph MP["modules/"]
-        FFPROD[FFmpeg producer]
-        HTMLPROD[HTML / CEF producer]
-        ULPROD[Ultralight producer]
-        IMGPROD[Image / Color producer]
+    subgraph MP["modules/ — producers"]
+        FFPROD[FFmpeg]:::moduleNode
+        HTMLPROD[HTML / CEF]:::moduleNode
+        ULPROD[Ultralight]:::moduleNode
+        IMGPROD[Image / Color]:::moduleNode
     end
 
     S --> STAGE
@@ -50,25 +59,32 @@ graph TD
     MP --> STAGE
 
     subgraph C["core/"]
-        STAGE[stage — Layers]
-        STAGE --> MIXER[mixer]
-        MIXER --> OUTPUT[output]
+        STAGE[stage — Layers]:::coreNode
+        STAGE --> MIXER[mixer]:::coreNode
+        MIXER --> OUTPUT[output]:::coreNode
     end
 
     MIXER -.-> OGL
 
     subgraph A["accelerator/"]
-        OGL[ogl::device + image_mixer]
+        OGL[ogl::device + image_mixer]:::gpuNode
     end
 
-    subgraph MC["modules/"]
-        FFCONS[FFmpeg file consumer]
-        OFFCONS[Offline consumer]
-        DECK[Decklink SDI consumer]
-        SCREEN[Screen consumer]
+    subgraph MC["modules/ — consumers"]
+        FFCONS[FFmpeg file]:::moduleNode
+        OFFCONS[Offline]:::moduleNode
+        DECK[Decklink SDI]:::moduleNode
+        SCREEN[Screen]:::moduleNode
     end
 
     OUTPUT --> MC
+
+    class S sgCtrl
+    class P sgCtrl
+    class MP sgModule
+    class C sgCore
+    class A sgGpu
+    class MC sgModule
 ```
 
 ### Directory responsibilities
@@ -156,34 +172,49 @@ the frame pipeline.
 
 ```mermaid
 graph LR
+    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
+    classDef moduleNode fill:#FFF,color:#0D7A0D,stroke:#0D7A0D,stroke-width:4px
+    classDef gpuNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:2px
+    classDef ctrlNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
+    classDef sgCore stroke:#0055FF,fill:#FFF,stroke-width:2px
+    classDef sgModule stroke:#0D7A0D,fill:#FFF,stroke-width:2px
+    classDef sgGpu stroke:#0055FF,fill:#EEF,stroke-width:2px
+    classDef sgCtrl stroke:#666,fill:#FFF,stroke-width:2px
+
     subgraph Main
-        MT[Main Thread]
-        MT -->|config, console| BOOT[Server Bootstrap]
+        MT[Main Thread]:::ctrlNode
+        MT -->|config, console| BOOT[Server Bootstrap]:::ctrlNode
     end
 
     subgraph ChannelThreads["Channel Threads (1 per channel)"]
-        CH1[Channel 1 Tick Loop]
-        CH2[Channel 2 Tick Loop]
+        CH1[Channel 1 Tick Loop]:::coreNode
+        CH2[Channel 2 Tick Loop]:::coreNode
     end
 
     subgraph GPU["OGL Thread (single)"]
-        GL[ogl::device dispatch queue]
+        GL[ogl::device dispatch queue]:::gpuNode
     end
 
     subgraph Protocol["Protocol Threads"]
-        AMCP_T[AMCP I/O — boost::asio]
-        OSC_T[OSC I/O — boost::asio]
+        AMCP_T[AMCP I/O]:::ctrlNode
+        OSC_T[OSC I/O]:::ctrlNode
     end
 
     subgraph ModuleThreads["Module Threads"]
-        FF_DEC[FFmpeg decode threads]
-        FF_ENC[FFmpeg encode threads]
-        DL_CAP[Decklink capture callback]
-        HTML_T[CEF browser process]
+        FF_DEC[FFmpeg decode]:::moduleNode
+        FF_ENC[FFmpeg encode]:::moduleNode
+        DL_CAP[Decklink capture]:::moduleNode
+        HTML_T[CEF browser]:::moduleNode
     end
 
     CH1 -->|dispatch_async| GL
     CH2 -->|dispatch_async| GL
+
+    class Main sgCtrl
+    class ChannelThreads sgCore
+    class GPU sgGpu
+    class Protocol sgCtrl
+    class ModuleThreads sgModule
     AMCP_T -->|command dispatch| CH1
     AMCP_T -->|command dispatch| CH2
     CH1 -->|send future| FF_ENC
@@ -223,12 +254,16 @@ connect via TCP and send text commands.
 
 ```mermaid
 flowchart TD
-    CLIENT[TCP Client]
-    CLIENT -->|text command| STRAT[AMCPProtocolStrategy]
-    STRAT -->|tokenize + route| REPO[amcp_command_repository]
-    REPO -->|parse_command| CMD[AMCPCommand]
-    CMD -->|execute| FUNC[amcp_command_func]
-    FUNC -->|calls into| CORE[core/ video_channel, stage, output]
+    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
+    classDef protoNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
+    classDef clientNode fill:#FFF,color:#666,stroke:#666,stroke-width:2px
+
+    CLIENT[TCP Client]:::clientNode
+    CLIENT -->|text command| STRAT[AMCPProtocolStrategy]:::protoNode
+    STRAT -->|tokenize + route| REPO[amcp_command_repository]:::protoNode
+    REPO -->|parse_command| CMD[AMCPCommand]:::protoNode
+    CMD -->|execute| FUNC[amcp_command_func]:::protoNode
+    FUNC -->|calls into| CORE[core/ video_channel, stage, output]:::coreNode
     CORE -->|result| FUNC
     FUNC -->|response code| CLIENT
 ```
@@ -269,20 +304,29 @@ registers its factories at startup via dependency injection.
 
 ```mermaid
 flowchart TB
+    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
+    classDef moduleNode fill:#FFF,color:#0D7A0D,stroke:#0D7A0D,stroke-width:4px
+    classDef ctrlNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
+    classDef sgStartup stroke:#0D7A0D,fill:#FFF,stroke-width:2px
+    classDef sgRuntime stroke:#0055FF,fill:#FFF,stroke-width:2px
+
     subgraph Registration["Module Registration (startup)"]
-        MOD_INIT["module::init(dependencies)"]
-        MOD_INIT -->|producer_registry| PR[register_producer_factory]
-        MOD_INIT -->|consumer_registry| CR[register_consumer_factory]
-        MOD_INIT -->|cg_registry| CG[register_cg_producer]
+        MOD_INIT["module::init(dependencies)"]:::moduleNode
+        MOD_INIT -->|producer_registry| PR[register_producer_factory]:::moduleNode
+        MOD_INIT -->|consumer_registry| CR[register_consumer_factory]:::moduleNode
+        MOD_INIT -->|cg_registry| CG[register_cg_producer]:::moduleNode
     end
 
     subgraph Runtime["Runtime Resolution"]
-        AMCP_CMD[AMCP PLAY / ADD / CG command] --> RESOLVE[Registry lookup]
-        RESOLVE --> FACTORY[Matching factory function]
-        FACTORY --> INSTANCE[Producer or Consumer instance]
+        AMCP_CMD[AMCP command]:::ctrlNode --> RESOLVE[Registry lookup]:::coreNode
+        RESOLVE --> FACTORY[Factory function]:::moduleNode
+        FACTORY --> INSTANCE[Producer or Consumer]:::coreNode
     end
 
     Registration -.->|populates| RESOLVE
+
+    class Registration sgStartup
+    class Runtime sgRuntime
 ```
 
 ### Registration API
@@ -571,13 +615,17 @@ throttled only by backpressure from a bounded frame queue.
 
 ```mermaid
 flowchart TB
-    STAGE[Stage — tick as fast as queue allows] --> MIXER[Mixer — GPU composite]
-    MIXER --> SEND["offline_consumer::send()"]
-    SEND -->|"push to bounded_queue<br/>(blocks when full → backpressure)"| Q[Bounded Frame Queue]
-    SEND -->|"resolve future immediately"| OUTPUT[Output → next tick]
-    Q --> ENC[Encoder Thread — encode video + audio]
-    ENC --> MUX[Packet Thread — mux to container]
-    MUX --> DISK["Disk — av_write_trailer() on removal"]
+    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
+    classDef moduleNode fill:#FFF,color:#0D7A0D,stroke:#0D7A0D,stroke-width:4px
+    classDef diskNode fill:#FFF,color:#CC9900,stroke:#CC9900,stroke-width:4px
+
+    STAGE[Stage]:::coreNode --> MIXER[Mixer]:::coreNode
+    MIXER --> SEND["offline_consumer::send()"]:::moduleNode
+    SEND -->|"push to bounded_queue<br/>(blocks when full)"| Q[Bounded Frame Queue]:::moduleNode
+    SEND -->|"resolve future immediately"| OUTPUT[Output — next tick]:::coreNode
+    Q --> ENC[Encoder Thread]:::moduleNode
+    ENC --> MUX[Packet Thread]:::moduleNode
+    MUX --> DISK["Disk"]:::diskNode
 ```
 
 Key design decisions:
@@ -602,27 +650,39 @@ frame drift. Ultralight provides a synchronous rendering API where one call
 to `receive_impl()` produces exactly one fresh frame.
 
 ```mermaid
-flowchart LR
+flowchart TD
+    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
+    classDef cefNode fill:#FFF,color:#666,stroke:#666,stroke-width:2px
+    classDef ulNode fill:#FFF,color:#0D7A0D,stroke:#0D7A0D,stroke-width:4px
+    classDef warnNode fill:#FFF,color:#CC9900,stroke:#CC9900,stroke-width:4px
+    classDef sgCef stroke:#666,fill:#FFF,stroke-width:2px
+    classDef sgUl stroke:#0D7A0D,fill:#FFF,stroke-width:2px
+
+    TICK[Channel Tick]:::coreNode
+
     subgraph CEF["CEF (async, wall-clock)"]
         direction TB
-        CEF_RAF["requestAnimationFrame<br/>fires at wall-clock rate"]
-        CEF_PAINT["OnPaint callback<br/>no 1:1 guarantee"]
+        CEF_RAF["requestAnimationFrame<br/>wall-clock rate"]:::cefNode
+        CEF_PAINT["OnPaint callback<br/>no 1:1 guarantee"]:::cefNode
         CEF_RAF --> CEF_PAINT
     end
 
-    subgraph Ultralight["Ultralight (synchronous)"]
+    subgraph UL["Ultralight (synchronous)"]
         direction TB
-        UL_UPDATE["Renderer::Update()<br/>advance JS + rAF"]
-        UL_RENDER["Renderer::Render()<br/>composite, blocks until done"]
-        UL_PIXELS["LockPixels()<br/>direct BGRA access"]
+        UL_UPDATE["Renderer::Update()<br/>advance JS + rAF"]:::ulNode
+        UL_RENDER["Renderer::Render()<br/>blocks until done"]:::ulNode
+        UL_PIXELS["LockPixels()<br/>direct BGRA access"]:::ulNode
         UL_UPDATE --> UL_RENDER --> UL_PIXELS
     end
 
-    TICK[Channel Tick] --> CEF
-    TICK --> Ultralight
+    TICK --> CEF
+    TICK --> UL
 
-    CEF -->|"1.5x real-time<br/>not deterministic"| FRAME1[Frame]
-    Ultralight -->|"1.5x real-time<br/>frame-accurate"| FRAME2[Frame]
+    CEF --> FRAME1["Frame (not deterministic)"]:::warnNode
+    UL --> FRAME2["Frame (frame-accurate)"]:::ulNode
+
+    class CEF sgCef
+    class UL sgUl
 ```
 
 Key properties:
