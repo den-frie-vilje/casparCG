@@ -70,11 +70,11 @@ echo ""
 step "1/8" "Analysing source video"
 
 SRC_FRAMES=$(ffprobe_cmd -v error -select_streams v:0 \
-    -show_entries stream=nb_frames -of csv=p=0 tests/media/sync_test.mp4 2>/dev/null)
+    -show_entries stream=nb_frames -of csv=p=0 tests/media/sync_test.mp4) || true
 SRC_FPS=$(ffprobe_cmd -v error -select_streams v:0 \
-    -show_entries stream=r_frame_rate -of csv=p=0 tests/media/sync_test.mp4 2>/dev/null)
+    -show_entries stream=r_frame_rate -of csv=p=0 tests/media/sync_test.mp4) || true
 SRC_DURATION=$(ffprobe_cmd -v error -select_streams v:0 \
-    -show_entries stream=duration -of csv=p=0 tests/media/sync_test.mp4 2>/dev/null)
+    -show_entries stream=duration -of csv=p=0 tests/media/sync_test.mp4) || true
 
 info "Source: ${SRC_FRAMES} frames, ${SRC_FPS} fps, ${SRC_DURATION}s"
 
