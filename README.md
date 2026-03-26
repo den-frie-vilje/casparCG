@@ -84,7 +84,14 @@ The test video is tracked in LFS. To regenerate it:
 ./tests/generate_test_media.sh
 ```
 
-Requires ffmpeg and the Inter / JetBrains Mono fonts (the script downloads them).
+Requires ffmpeg. Fonts (Inter, JetBrains Mono) are downloaded automatically by
+the script, or you can fetch them separately:
+
+```bash
+./tests/download_fonts.sh
+```
+
+Fonts are placed in `tests/fonts/` and copied to `tests/templates/` for Docker.
 
 ## Building from source
 

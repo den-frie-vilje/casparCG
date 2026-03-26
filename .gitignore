@@ -22,6 +22,7 @@ tests/output-*/*
 
 # Downloaded fonts (fetched by tests/download_fonts.sh)
 tests/fonts/
+tests/templates/*.ttf
 
 # Docker
 *.dmg

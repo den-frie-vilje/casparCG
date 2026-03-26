@@ -1,10 +1,12 @@
 #!/bin/bash
 # Download fonts used by test media and templates.
-# Fonts are placed in tests/fonts/ and referenced from there.
+# Fonts are placed in tests/fonts/ and copied to tests/templates/
+# so Docker containers can serve them alongside HTML templates.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 FONT_DIR="$SCRIPT_DIR/fonts"
+TMPL_DIR="$SCRIPT_DIR/templates"
 mkdir -p "$FONT_DIR"
 
 BLUE='\033[38;5;33m'
@@ -40,6 +42,11 @@ if [ ! -f "$FONT_DIR/JetBrainsMono-Medium.ttf" ]; then
 else
     echo -e "  JetBrains Mono... already present $OK"
 fi
+
+# Copy to templates/ for Docker container access
+echo -n "  Copying to templates/... "
+cp "$FONT_DIR"/*.ttf "$TMPL_DIR/" 2>/dev/null || true
+echo -e "$OK"
 
 echo ""
 echo -e "  ${BLUE}Fonts ready:${RST}"
