@@ -159,92 +159,107 @@ run_test() {
     fi
     amcp_batch "$batch_cmds"
 
-    # Render + flush: measure total wall-clock including I/O
+    # Render + flush: measure total wall-clock including I/O.
+    # Uses a persistent AMCP connection for precise polling (no TCP overhead).
+    # Detects video end via <time> reaching duration (same as test_precise_render).
+    # Issues REMOVE on the same connection for zero-latency flush.
     local wall_ms
     local mp4_path="$OUTPUT_DIR/${filename}.mp4"
+    local remove_cmd
+    if [ "$cons" = "offline" ]; then
+        remove_cmd="REMOVE 1 OFFLINE /output/${filename}.mp4"
+    else
+        remove_cmd="REMOVE 1 FILE /output/${filename}.mp4"
+    fi
 
     wall_ms=$(python3 << PYEOF
-import socket, time, re, os
+import socket, time, re, os, sys
 
 PORT = $PORT
-target = $target
-duration = $duration
-cons = "$cons"
-mp4_path = "$mp4_path"
+src_duration = float($duration)
+remove_cmd = "$remove_cmd"
+
+def amcp_session():
+    s = socket.socket()
+    s.settimeout(30)
+    s.connect(('localhost', PORT))
+    return s
 
 t0 = time.monotonic()
 
-if cons == "offline":
-    # Poll until frame target reached
-    print("offline_poll", file=__import__('sys').stderr)
-    while time.monotonic() - t0 < 60:
-        time.sleep(0.2)
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(2)
-            s.connect(('localhost', PORT))
-            s.send(b'INFO 1\r\n')
-            time.sleep(0.2)
-            data = s.recv(16384).decode(errors='replace')
-            s.close()
-            m = re.search(r'<frame>(\d+)</frame>', data)
-            if m and int(m.group(1)) >= target:
-                break
-        except:
-            pass
-else:
-    # FFmpeg: real-time, just wait
-    time.sleep(duration + 2)
+# Poll with persistent connection until video time reaches duration
+poll = amcp_session()
+done = False
 
-# STOP + REMOVE (flush the mp4 trailer)
-def amcp_cmd(cmd):
+while time.monotonic() - t0 < 120 and not done:
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(5)
-        s.connect(('localhost', PORT))
-        s.send((cmd + '\r\n').encode())
-        time.sleep(0.3)
+        poll.send(b'INFO 1-1\r\n')
+        data = b''
+        while b'</channel>' not in data:
+            chunk = poll.recv(16384)
+            if not chunk:
+                raise ConnectionError()
+            data += chunk
+        info = data.decode(errors='replace')
+
+        times = re.findall(r'<time>([^<]+)</time>', info)
+        if len(times) >= 2:
+            current_t = float(times[0])
+            total_t = float(times[1])
+            if current_t >= total_t - 0.001 and total_t > 0:
+                # Video ended — REMOVE on same connection (zero latency)
+                poll.send((remove_cmd + '\r\n').encode())
+                time.sleep(0.5)
+                try: poll.recv(8192)
+                except: pass
+                done = True
+                break
+    except:
+        try: poll.close()
+        except: pass
+        poll = amcp_session()
+
+    time.sleep(0.01)  # 10ms poll interval
+
+try: poll.close()
+except: pass
+
+if not done:
+    # Timeout fallback — still try to flush
+    try:
+        s = amcp_session()
+        s.send((remove_cmd + '\r\n').encode())
+        time.sleep(1)
         s.recv(4096)
         s.close()
-    except:
-        pass
-
-amcp_cmd('STOP 1-1')
-if cons == "offline":
-    amcp_cmd('REMOVE 1 OFFLINE /output/${filename}.mp4')
-else:
-    amcp_cmd('REMOVE 1 FILE /output/${filename}.mp4')
+    except: pass
 
 # Wait for file to stabilize (moov atom written)
 prev_size = 0
 for _ in range(15):
     time.sleep(0.5)
     try:
-        cur_size = os.path.getsize(mp4_path)
+        cur_size = os.path.getsize("$mp4_path")
         if cur_size == prev_size and cur_size > 0:
             break
         prev_size = cur_size
     except:
         pass
 
-# Total wall-clock: render + encode + flush
+# Total wall-clock: COMMIT to file flushed
 print(int((time.monotonic() - t0) * 1000))
 PYEOF
 )
-    if [ "$cons" = "offline" ]; then
-        info "Offline: render + flush complete"
-    else
-        info "FFmpeg: real-time render complete"
-    fi
+    info "Render + flush complete"
 
-    # Now stop the container
+    # Stop the container
     $DOCKER stop -t 10 "$CONTAINER_NAME" > /dev/null 2>&1 || true
     $DOCKER rm -f "$CONTAINER_NAME" > /dev/null 2>&1 || true
     sleep 1
 
-    local wall_display=$(echo "scale=1; $wall_ms / 1000" | bc 2>/dev/null || echo "?")
-    ok "Rendered in ${wall_display}s wall-clock"
-    RESULTS+=("$label|$filename|${wall_ms}")
+    local wall_s=$(python3 -c "print(f'{$wall_ms / 1000:.1f}')")
+    ok "Rendered in ${wall_s}s wall-clock"
+    RESULTS+=("$label|$filename|${wall_ms}|$target")
     TEST_NUM=$((TEST_NUM + 1))
 }
 
@@ -277,12 +292,12 @@ info "Waiting for output files to settle..."
 sleep 5
 
 for r in "${RESULTS[@]}"; do
-    IFS='|' read -r label filename wall_ms <<< "$r"
+    IFS='|' read -r label filename wall_ms expected <<< "$r"
     local_mp4="$OUTPUT_DIR/${filename}.mp4"
-    wall_s=$(echo "scale=1; $wall_ms / 1000" | bc 2>/dev/null || echo "?")
+    wall_s=$(python3 -c "print(f'{$wall_ms / 1000:.1f}')")
 
     if [ ! -f "$local_mp4" ]; then
-        ANALYSIS+=("$label|FAIL|-|-")
+        ANALYSIS+=("$label|FAIL|-|-|-")
         continue
     fi
 
@@ -297,36 +312,44 @@ for r in "${RESULTS[@]}"; do
     done
 
     if [ -z "$nb_frames" ] || [ "$nb_frames" = "N/A" ]; then
-        ANALYSIS+=("$label|FAIL (no moov)|-|-")
+        ANALYSIS+=("$label|FAIL (no moov)|-|-|-")
         continue
     fi
 
-    # FFmpeg consumer is real-time by definition (sync clock locked).
-    # Offline consumer speed = content_duration / wall_clock.
-    if [[ "$label" == *"FFmpeg"* ]]; then
-        speed="1.0"
+    # Speed = content_duration / wall_clock (for all consumers)
+    speed=$(python3 -c "print(f'{$nb_frames / 25.0 / ($wall_ms / 1000.0):.1f}')" 2>/dev/null || echo "?")
+
+    # Frame accuracy: difference from expected
+    diff=$((nb_frames - expected))
+    if [ "$diff" -eq 0 ]; then
+        accuracy="exact"
+    elif [ "$diff" -gt 0 ]; then
+        accuracy="+${diff}"
     else
-        speed=$(python3 -c "print(f'{$nb_frames / 25.0 / ($wall_ms / 1000.0):.1f}')" 2>/dev/null || echo "?")
+        accuracy="${diff}"
     fi
-    ANALYSIS+=("$label|$nb_frames|${speed}x|${wall_s}s")
+
+    ANALYSIS+=("$label|$nb_frames|${speed}x|${wall_s}s|${accuracy}")
 done
 
 echo -e "  ${BLUE}Results${RST}"
 echo ""
-printf "  ${WHITE}%-24s  %8s  %8s  %8s${RST}\n" "Configuration" "Frames" "Speed" "Wall"
-printf "  %-24s  %8s  %8s  %8s\n" "────────────────────────" "────────" "────────" "────────"
+printf "  ${WHITE}%-24s  %8s  %8s  %8s  %8s${RST}\n" "Configuration" "Frames" "Speed" "Wall" "Accuracy"
+printf "  %-24s  %8s  %8s  %8s  %8s\n" "────────────────────────" "────────" "────────" "────────" "────────"
 
 for r in "${ANALYSIS[@]}"; do
-    IFS='|' read -r label frames speed wall <<< "$r"
+    IFS='|' read -r label frames speed wall accuracy <<< "$r"
     if [[ "$frames" == FAIL* ]]; then
-        printf "  ${PINK}%-24s  %8s  %8s  %8s${RST}\n" "$label" "$frames" "-" "-"
+        printf "  ${PINK}%-24s  %8s  %8s  %8s  %8s${RST}\n" "$label" "$frames" "-" "-" "-"
+    elif [[ "$accuracy" == "exact" ]]; then
+        printf "  ${GREEN}%-24s${RST}  %8s  %8s  %8s  ${GREEN}%8s${RST}\n" "$label" "$frames" "$speed" "$wall" "$accuracy"
     else
-        printf "  ${GREEN}%-24s${RST}  %8s  %8s  %8s\n" "$label" "$frames" "$speed" "$wall"
+        printf "  ${PINK}%-24s${RST}  %8s  %8s  %8s  ${PINK}%8s${RST}\n" "$label" "$frames" "$speed" "$wall" "$accuracy"
     fi
 done
 
 echo ""
-info "FFmpeg consumer = real-time (~500 frames in 20s)"
-info "Offline consumer = faster-than-real-time"
+info "Source: 500 frames, 25fps, 20s"
+info "Speed = content duration / wall-clock (including flush)"
 info "Verify sync: ffmpeg -i file.mp4 -vf select=eq(n\\,0) -frames:v 1 frame.png"
 echo ""
