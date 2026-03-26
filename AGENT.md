@@ -17,7 +17,7 @@ build arg to force invalidation:
 
 ```bash
 SRC_HASH=$(find server/src -name '*.cpp' -o -name '*.h' | sort | xargs shasum | shasum | cut -c1-12)
-docker build --build-arg SOURCE_HASH="$SRC_HASH" -f docker/Dockerfile.offline -t casparcg-offline .
+docker build --build-arg SOURCE_HASH="$SRC_HASH" -f tests/Dockerfile.offline -t casparcg-offline .
 ```
 
 Without this, you may get a stale binary even after editing source files.
@@ -30,7 +30,7 @@ This has wasted significant time repeatedly.
 
 **Always build with:**
 ```bash
-docker build --progress=plain -f docker/Dockerfile.offline -t casparcg-offline . 2>&1 | tee /tmp/build.log
+docker build --progress=plain -f tests/Dockerfile.offline -t casparcg-offline . 2>&1 | tee /tmp/build.log
 ```
 
 To find errors in the log: `grep "error:" /tmp/build.log`
@@ -236,11 +236,11 @@ REMOVE 1 FILE /output/file.mp4
 | Offline consumer source | `server/src/modules/ffmpeg/consumer/offline_consumer.cpp` |
 | Ultralight producer source | `server/src/modules/ultralight/producer/ultralight_producer.cpp` |
 | CEF frame injection | `server/src/modules/html/producer/html_producer.cpp` |
-| Docker build | `docker/Dockerfile.offline` |
-| CasparCG config | `docker/config/offline.config` |
-| Test video generator | `docker/generate_sync_test.sh` |
-| Matrix benchmark | `docker/test_matrix.sh` |
-| Overlay template | `docker/templates/sync_test.html` |
+| Docker build | `tests/Dockerfile.offline` |
+| CasparCG config | `tests/config/offline.config` |
+| Test video generator | `tests/generate_sync_test.sh` |
+| Matrix benchmark | `tests/test_matrix.sh` |
+| Overlay template | `tests/templates/sync_test.html` |
 | Architecture docs | `server/docs/architecture.md` |
 | Offline rendering docs | `server/docs/offline-rendering.md` |
 | Ultralight docs | `server/docs/ultralight-producer.md` |

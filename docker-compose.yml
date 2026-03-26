@@ -9,22 +9,22 @@
 #
 # Usage:
 #   docker compose build
-#   ./docker/test_cef.sh
+#   ./tests/test_cef.sh
 
 services:
   baseline:
     stop_grace_period: 30s
     build:
       context: .
-      dockerfile: docker/Dockerfile.baseline
+      dockerfile: tests/Dockerfile.baseline
     platform: linux/amd64
     ports:
       - "5250:5250"
     volumes:
-      - ./docker/config/baseline.config:/usr/share/casparcg-server-2.5/casparcg.config:ro
-      - ./docker/media:/media:ro
-      - ./docker/templates:/templates
-      - ./docker/output-baseline:/output
+      - ./tests/config/baseline.config:/usr/share/casparcg-server-2.5/casparcg.config:ro
+      - ./tests/media:/media:ro
+      - ./tests/templates:/templates
+      - ./tests/output-baseline:/output
     environment:
       - LIBGL_ALWAYS_SOFTWARE=1
       - EGL_PLATFORM=surfaceless
@@ -33,15 +33,15 @@ services:
     stop_grace_period: 30s
     build:
       context: .
-      dockerfile: docker/Dockerfile.offline
+      dockerfile: tests/Dockerfile.offline
     platform: linux/amd64
     ports:
       - "5251:5250"
     volumes:
-      - ./docker/config/offline.config:/opt/casparcg/casparcg.config:ro
-      - ./docker/media:/media:ro
-      - ./docker/templates:/templates
-      - ./docker/output-offline:/output
+      - ./tests/config/offline.config:/opt/casparcg/casparcg.config:ro
+      - ./tests/media:/media:ro
+      - ./tests/templates:/templates
+      - ./tests/output-offline:/output
     environment:
       - LIBGL_ALWAYS_SOFTWARE=1
       - EGL_PLATFORM=surfaceless

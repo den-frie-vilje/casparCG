@@ -13,7 +13,7 @@ cd "$REPO_DIR"
 
 PORT=5252
 DOCKER="${DOCKER:-/usr/local/bin/docker}"
-OUTPUT_DIR="docker/output-precise"
+OUTPUT_DIR="tests/output-precise"
 CONTAINER_NAME="casparcg-precise"
 
 ffprobe_cmd() {
@@ -60,11 +60,11 @@ echo ""
 step "1/8" "Analysing source video"
 
 SRC_FRAMES=$(ffprobe_cmd -v error -select_streams v:0 \
-    -show_entries stream=nb_frames -of csv=p=0 docker/media/sync_test.mp4 2>/dev/null)
+    -show_entries stream=nb_frames -of csv=p=0 tests/media/sync_test.mp4 2>/dev/null)
 SRC_FPS=$(ffprobe_cmd -v error -select_streams v:0 \
-    -show_entries stream=r_frame_rate -of csv=p=0 docker/media/sync_test.mp4 2>/dev/null)
+    -show_entries stream=r_frame_rate -of csv=p=0 tests/media/sync_test.mp4 2>/dev/null)
 SRC_DURATION=$(ffprobe_cmd -v error -select_streams v:0 \
-    -show_entries stream=duration -of csv=p=0 docker/media/sync_test.mp4 2>/dev/null)
+    -show_entries stream=duration -of csv=p=0 tests/media/sync_test.mp4 2>/dev/null)
 
 info "Source: ${SRC_FRAMES} frames, ${SRC_FPS} fps, ${SRC_DURATION}s"
 
@@ -89,9 +89,9 @@ sleep 2
 $DOCKER run -d --rm --name "$CONTAINER_NAME" \
     --platform linux/amd64 \
     -p ${PORT}:5250 \
-    -v "$REPO_DIR/docker/config/offline.config:/opt/casparcg/casparcg.config:ro" \
-    -v "$REPO_DIR/docker/media:/media:ro" \
-    -v "$REPO_DIR/docker/templates:/templates" \
+    -v "$REPO_DIR/tests/config/offline.config:/opt/casparcg/casparcg.config:ro" \
+    -v "$REPO_DIR/tests/media:/media:ro" \
+    -v "$REPO_DIR/tests/templates:/templates" \
     -v "$REPO_DIR/$OUTPUT_DIR:/output" \
     -e LIBGL_ALWAYS_SOFTWARE=1 \
     -e EGL_PLATFORM=surfaceless \

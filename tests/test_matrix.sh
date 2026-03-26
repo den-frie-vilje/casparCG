@@ -44,13 +44,13 @@ echo -e "  ${BLUE}│${RST}  ${DIM}den frie vilje / serial benchmark${RST}      
 echo -e "  ${BLUE}└─────────────────────────────────────────────┘${RST}"
 echo ""
 
-OUTPUT_DIR="docker/output-matrix"
+OUTPUT_DIR="tests/output-matrix"
 # Remove only the specific output files we'll create (don't nuke the whole dir)
 rm -f "$OUTPUT_DIR"/ch1_*.mp4 "$OUTPUT_DIR"/ch2_*.mp4 "$OUTPUT_DIR"/ch3_*.mp4 "$OUTPUT_DIR"/ch4_*.mp4
 mkdir -p "$OUTPUT_DIR"
 
 CONTAINER_NAME="casparcg-matrix"
-CONFIG="$REPO_DIR/docker/config/offline.config"
+CONFIG="$REPO_DIR/tests/config/offline.config"
 
 # ── AMCP helpers ─────────────────────────────────────────────────────────────
 
@@ -107,8 +107,8 @@ start_server() {
         --platform linux/amd64 \
         -p ${PORT}:5250 \
         -v "$CONFIG:/opt/casparcg/casparcg.config:ro" \
-        -v "$REPO_DIR/docker/media:/media:ro" \
-        -v "$REPO_DIR/docker/templates:/templates" \
+        -v "$REPO_DIR/tests/media:/media:ro" \
+        -v "$REPO_DIR/tests/templates:/templates" \
         -v "$REPO_DIR/$OUTPUT_DIR:/output" \
         -e LIBGL_ALWAYS_SOFTWARE=1 \
         -e EGL_PLATFORM=surfaceless \

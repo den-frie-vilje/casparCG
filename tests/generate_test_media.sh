@@ -1,7 +1,7 @@
 #!/bin/bash
 # Generate the sync_test.mp4 source video for the matrix benchmark.
 #
-# This video is designed to visually pair with docker/templates/sync_test.html:
+# This video is designed to visually pair with tests/templates/sync_test.html:
 # - Subtle dark blue blurred organic background
 # - Big centered frame counter (full white, offset LEFT of center)
 # - Overlay's frame counter is offset RIGHT of center
@@ -15,7 +15,7 @@
 # Duration: 20s at 25fps = 500 frames
 #
 # Usage: ./generate_sync_test.sh [output_path]
-# Default: docker/media/sync_test.mp4
+# Default: tests/media/sync_test.mp4
 
 set -euo pipefail
 
