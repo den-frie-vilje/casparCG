@@ -211,14 +211,15 @@ AMCP (Advanced Media Control Protocol) is the primary control interface. Clients
 connect via TCP and send text commands.
 
 ```mermaid
-flowchart LR
-    CLIENT[TCP Client] -->|text command| STRAT[AMCPProtocolStrategy]
+flowchart TD
+    CLIENT[TCP Client]
+    CLIENT -->|text command| STRAT[AMCPProtocolStrategy]
     STRAT -->|tokenize + route| REPO[amcp_command_repository]
     REPO -->|parse_command| CMD[AMCPCommand]
     CMD -->|execute| FUNC[amcp_command_func]
-    FUNC -->|calls into| CORE[core:: video_channel / stage / output]
+    FUNC -->|calls into| CORE[core/ video_channel, stage, output]
     CORE -->|result| FUNC
-    FUNC -->|response code + data| CLIENT
+    FUNC -->|response code| CLIENT
 ```
 
 ### Command lifecycle
