@@ -108,17 +108,18 @@ REMOVE 1 OFFLINE /output/render.mp4
 ## Performance
 
 Measured in Docker on macOS (software GL, 720p25). Native Linux with GPU
-will be significantly faster.
+will be faster.
 
-| Scenario                     | Speed  | Deterministic |
-|------------------------------|--------|---------------|
-| Video only (offline)         | ~17x   | Yes           |
-| Video + Ultralight (offline) | ~2x    | Yes (500/500) |
-| Video + CEF (offline)        | ~17x   | No*           |
+| Scenario                     | Speed | Frames | Deterministic |
+|------------------------------|-------|--------|---------------|
+| Video only (offline)         | 2.3x  | 501    | +1            |
+| Video + Ultralight (offline) | 1.5x  | 500    | exact         |
+| Video + CEF (offline)        | 1.5x  | 500    | No*           |
+| FFmpeg consumer (any)        | 0.9x  | 501    | +1            |
 
-\* CEF renders asynchronously at wall-clock speed. In offline mode the channel
-ticks faster, so CEF frames are duplicated/skipped. Use Ultralight for
-frame-accurate offline rendering. See [Ultralight HTML Producer](ultralight-producer.md).
+\* CEF renders asynchronously at wall-clock speed. In offline mode the overlay
+frames are duplicated/skipped. Use Ultralight for deterministic rendering.
+See [Ultralight HTML Producer](ultralight-producer.md).
 
 ## Source files
 

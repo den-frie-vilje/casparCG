@@ -637,8 +637,8 @@ flowchart LR
     TICK[Channel Tick] --> CEF
     TICK --> Ultralight
 
-    CEF -->|"~17x real-time<br/>not deterministic"| FRAME1[Frame]
-    Ultralight -->|"~2x real-time<br/>frame-accurate"| FRAME2[Frame]
+    CEF -->|"1.5x real-time<br/>not deterministic"| FRAME1[Frame]
+    Ultralight -->|"1.5x real-time<br/>frame-accurate"| FRAME2[Frame]
 ```
 
 Key properties:
@@ -685,10 +685,10 @@ sequenceDiagram
     Note over OC: Flush encoder, write trailer
 ```
 
-This produces a frame-accurate file render at ~2x real-time for content with
-Ultralight HTML overlays (tested in Docker with software GL). CEF templates
-render at ~17x but are not deterministic (frames are duplicated/skipped).
-Video-only renders at ~17x with exact frame counts.
+This produces a frame-accurate file render at 1.5x real-time for content with
+Ultralight HTML overlays (tested in Docker with software GL). Video-only
+renders at 2.3x. CEF templates also run at 1.5x but are not deterministic
+(overlay frames are duplicated/skipped). Native Linux with GPU will be faster.
 
 ---
 
