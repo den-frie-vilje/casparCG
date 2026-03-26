@@ -321,7 +321,7 @@ flowchart TB
     subgraph Runtime["Runtime Resolution"]
         AMCP_CMD[AMCP command]:::ctrlNode --> RESOLVE[Registry lookup]:::coreNode
         RESOLVE --> FACTORY[Factory function]:::moduleNode
-        FACTORY --> INSTANCE[Producer or Consumer]:::coreNode
+        FACTORY --> INSTANCE[Producer or Consumer]:::moduleNode
     end
 
     Registration -.->|populates| RESOLVE
