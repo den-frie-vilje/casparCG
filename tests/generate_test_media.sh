@@ -24,9 +24,14 @@ OUTPUT="${1:-$SCRIPT_DIR/media/sync_test.mp4}"
 
 FFMPEG="${FFMPEG:-$(command -v ffmpeg 2>/dev/null || echo /opt/homebrew/bin/pkgx\ ffmpeg)}"
 
-# Font paths — JetBrains Mono for frame counters (monospaced digits)
-FONT_MONO="${FONT_MONO:-/tmp/jetbrains-mono/fonts/ttf/JetBrainsMono-Regular.ttf}"
-FONT_MONO_BOLD="${FONT_MONO_BOLD:-/tmp/jetbrains-mono/fonts/ttf/JetBrainsMono-Medium.ttf}"
+# Font paths — download if missing
+FONT_DIR="$SCRIPT_DIR/fonts"
+if [ ! -f "$FONT_DIR/JetBrainsMono-Medium.ttf" ]; then
+    echo "Fonts not found. Running download_fonts.sh..."
+    bash "$SCRIPT_DIR/download_fonts.sh"
+fi
+FONT_MONO="${FONT_MONO:-$FONT_DIR/JetBrainsMono-Medium.ttf}"
+FONT_MONO_BOLD="${FONT_MONO_BOLD:-$FONT_DIR/JetBrainsMono-Medium.ttf}"
 
 W=1280 H=720 FPS=25 DUR=20
 

@@ -20,6 +20,9 @@ build/
 tests/output-*/*
 !tests/output-*/.gitkeep
 
+# Downloaded fonts (fetched by tests/download_fonts.sh)
+tests/fonts/
+
 # Docker
 *.dmg
 
