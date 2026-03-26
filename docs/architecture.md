@@ -31,11 +31,11 @@ well-defined responsibility boundary.
 ```mermaid
 graph TD
     classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
-    classDef moduleNode fill:#FFF,color:#0D7A0D,stroke:#0D7A0D,stroke-width:4px
+    classDef moduleNode fill:#FFF,color:#1AAF1A,stroke:#1AAF1A,stroke-width:4px
     classDef gpuNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:2px
     classDef ctrlNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
     classDef sgCore stroke:#0055FF,fill:#FFF,color:#0055FF,stroke-width:2px
-    classDef sgModule stroke:#0D7A0D,fill:#FFF,color:#0D7A0D,stroke-width:2px
+    classDef sgModule stroke:#1AAF1A,fill:#FFF,color:#1AAF1A,stroke-width:2px
     classDef sgGpu stroke:#0055FF,fill:#EEF,color:#0055FF,stroke-width:2px
     classDef sgCtrl stroke:#666,fill:#FFF,color:#666,stroke-width:2px
 
@@ -121,6 +121,7 @@ Every video channel runs a continuous frame production loop. Each tick of the
 loop produces one output frame by pulling data through the pipeline.
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'actorBkg': '#0055FF', 'actorTextColor': '#FFF', 'actorBorder': '#0055FF', 'activationBkgColor': '#E8F0FE', 'activationBorderColor': '#0055FF', 'signalColor': '#333', 'signalTextColor': '#333', 'noteBkgColor': '#FFF9E6', 'noteBorderColor': '#CC9900', 'noteTextColor': '#333', 'loopTextColor': '#0055FF' }}}%%
 sequenceDiagram
     participant S as Stage (Layers)
     participant P as frame_producer
@@ -137,7 +138,7 @@ sequenceDiagram
         GPU->>GPU: OpenGL composite + readback
         GPU-->>M: const_frame (composited pixels + audio)
         M->>O: send(field, frame)
-        O->>C: send(field, frame) → future<bool>
+        O->>C: send(field, frame) → future
         C-->>O: future resolves (timing gate)
     end
 ```
@@ -173,11 +174,11 @@ the frame pipeline.
 ```mermaid
 graph LR
     classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
-    classDef moduleNode fill:#FFF,color:#0D7A0D,stroke:#0D7A0D,stroke-width:4px
+    classDef moduleNode fill:#FFF,color:#1AAF1A,stroke:#1AAF1A,stroke-width:4px
     classDef gpuNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:2px
     classDef ctrlNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
     classDef sgCore stroke:#0055FF,fill:#FFF,stroke-width:2px
-    classDef sgModule stroke:#0D7A0D,fill:#FFF,stroke-width:2px
+    classDef sgModule stroke:#1AAF1A,fill:#FFF,stroke-width:2px
     classDef sgGpu stroke:#0055FF,fill:#EEF,stroke-width:2px
     classDef sgCtrl stroke:#666,fill:#FFF,stroke-width:2px
 
@@ -305,9 +306,9 @@ registers its factories at startup via dependency injection.
 ```mermaid
 flowchart TB
     classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
-    classDef moduleNode fill:#FFF,color:#0D7A0D,stroke:#0D7A0D,stroke-width:4px
+    classDef moduleNode fill:#FFF,color:#1AAF1A,stroke:#1AAF1A,stroke-width:4px
     classDef ctrlNode fill:#666,color:#FFF,stroke:#333,stroke-width:4px
-    classDef sgStartup stroke:#0D7A0D,fill:#FFF,stroke-width:2px
+    classDef sgStartup stroke:#1AAF1A,fill:#FFF,stroke-width:2px
     classDef sgRuntime stroke:#0055FF,fill:#FFF,stroke-width:2px
 
     subgraph Registration["Module Registration (startup)"]
@@ -365,24 +366,30 @@ decoupled from the core through the `image_mixer` interface.
 
 ```mermaid
 flowchart TB
+    classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
+    classDef gpuNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:2px
+    classDef sgCore stroke:#0055FF,fill:#FFF,stroke-width:2px
+    classDef sgGpu stroke:#0055FF,fill:#EEF,stroke-width:2px
+
     subgraph Channel["Channel Tick"]
-        MIX[Mixer]
+        MIX[Mixer]:::coreNode
     end
 
     subgraph Accelerator["accelerator/ogl/"]
-        IM[image_mixer]
-        DEV[ogl::device — GL context + dispatch queue]
-        SHADER[GLSL shaders]
-        PBO[Pixel Buffer Objects]
+        IM[image_mixer]:::gpuNode
+        DEV[ogl::device]:::gpuNode
+        SHADER[GLSL shaders]:::gpuNode
+        PBO[Pixel Buffer Objects]:::gpuNode
     end
 
-    MIX -->|"push(transform)"| IM
-    MIX -->|"visit(const_frame)"| IM
-    MIX -->|"pop()"| IM
+    MIX -->|"push / visit / pop"| IM
     IM -->|dispatch_async| DEV
     DEV --> SHADER
     DEV --> PBO
     PBO -->|async readback| MIX
+
+    class Channel sgCore
+    class Accelerator sgGpu
 ```
 
 ### Visitor pattern compositing
@@ -490,6 +497,7 @@ This is one of the most important architectural concepts in CasparCG and is
 critical to understanding offline rendering.
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'actorBkg': '#0055FF', 'actorTextColor': '#FFF', 'actorBorder': '#0055FF', 'activationBkgColor': '#E8F0FE', 'activationBorderColor': '#0055FF', 'signalColor': '#333', 'signalTextColor': '#333', 'noteBkgColor': '#FFF9E6', 'noteBorderColor': '#CC9900', 'noteTextColor': '#333' }}}%%
 sequenceDiagram
     participant O as Output
     participant DL as Decklink Consumer
@@ -499,20 +507,20 @@ sequenceDiagram
     Note over O: Channel tick complete, frame ready
 
     par Fan-out to all consumers
-        O->>DL: send(frame) → future
-        O->>FF: send(frame) → future
-        O->>OC: send(frame) → future
+        O->>DL: send(frame)
+        O->>FF: send(frame)
+        O->>OC: send(frame)
     end
 
-    Note over DL: Future resolves when SDI<br/>hardware clock fires (~40ms for 25fps)
-    Note over FF: Future resolves after<br/>wall-clock sleep to maintain real-time
-    Note over OC: Future resolves immediately<br/>after bounded queue push
+    Note over DL: Resolves on SDI clock (~40ms)
+    Note over FF: Resolves after wall-clock sleep
+    Note over OC: Resolves immediately after queue push
 
     DL-->>O: future resolved
     FF-->>O: future resolved
     OC-->>O: future resolved
 
-    Note over O: All futures resolved → next tick
+    Note over O: All futures resolved, next tick
 ```
 
 ### How timing works
@@ -616,7 +624,7 @@ throttled only by backpressure from a bounded frame queue.
 ```mermaid
 flowchart TB
     classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
-    classDef moduleNode fill:#FFF,color:#0D7A0D,stroke:#0D7A0D,stroke-width:4px
+    classDef moduleNode fill:#FFF,color:#1AAF1A,stroke:#1AAF1A,stroke-width:4px
     classDef diskNode fill:#FFF,color:#CC9900,stroke:#CC9900,stroke-width:4px
 
     STAGE[Stage]:::coreNode --> MIXER[Mixer]:::coreNode
@@ -653,10 +661,10 @@ to `receive_impl()` produces exactly one fresh frame.
 flowchart TD
     classDef coreNode fill:#FFF,color:#0055FF,stroke:#0055FF,stroke-width:4px
     classDef cefNode fill:#FFF,color:#666,stroke:#666,stroke-width:2px
-    classDef ulNode fill:#FFF,color:#0D7A0D,stroke:#0D7A0D,stroke-width:4px
+    classDef ulNode fill:#FFF,color:#1AAF1A,stroke:#1AAF1A,stroke-width:4px
     classDef warnNode fill:#FFF,color:#CC9900,stroke:#CC9900,stroke-width:4px
     classDef sgCef stroke:#666,fill:#FFF,stroke-width:2px
-    classDef sgUl stroke:#0D7A0D,fill:#FFF,stroke-width:2px
+    classDef sgUl stroke:#1AAF1A,fill:#FFF,stroke-width:2px
 
     TICK[Channel Tick]:::coreNode
 
@@ -702,6 +710,7 @@ template compatibility details, and known limitations.
 The offline consumer and Ultralight producer are designed to work together:
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'actorBkg': '#0055FF', 'actorTextColor': '#FFF', 'actorBorder': '#0055FF', 'activationBkgColor': '#E8F0FE', 'activationBorderColor': '#0055FF', 'signalColor': '#333', 'signalTextColor': '#333', 'noteBkgColor': '#FFF9E6', 'noteBorderColor': '#CC9900', 'noteTextColor': '#333', 'loopTextColor': '#1AAF1A' }}}%%
 sequenceDiagram
     participant A as AMCP Client
     participant CH as Channel
@@ -719,9 +728,9 @@ sequenceDiagram
     A->>CH: COMMIT
 
     loop Faster than real-time
-        CH->>UL: receive_impl() — synchronous render
-        UL-->>CH: draw_frame (BGRA pixels)
-        CH->>OC: send(frame) — push to queue
+        CH->>UL: receive_impl()
+        UL-->>CH: draw_frame (BGRA)
+        CH->>OC: send(frame)
         OC-->>CH: future resolves immediately
     end
 
