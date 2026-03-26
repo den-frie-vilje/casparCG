@@ -14,9 +14,10 @@ real-time playout.
 CEF renders asynchronously on its own wall-clock timer (~25fps). This works for
 real-time playout but creates two problems for offline rendering:
 
-1. **Speed ceiling**: CEF can't render faster than wall-clock. The offline
-   consumer achieves 3× real-time for video-only content but drops to ~1×
-   when CEF templates are active.
+1. **Not deterministic**: CEF renders asynchronously. The offline consumer
+   achieves ~17× real-time for video-only content, and ~17× with CEF too —
+   but CEF frames are duplicated/skipped because CEF paints at wall-clock
+   speed while the channel ticks faster.
 
 2. **Frame drift**: CEF's `requestAnimationFrame` fires at wall-clock rate,
    not at the channel tick rate. In offline mode the channel ticks faster,

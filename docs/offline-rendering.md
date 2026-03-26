@@ -107,15 +107,18 @@ REMOVE 1 OFFLINE /output/render.mp4
 
 ## Performance
 
-| Scenario (1080p25)          | Expected speed     |
-|-----------------------------|--------------------|
-| Video only, libx264 fast    | 3–8× real-time     |
-| Video only, ProRes 422 HQ   | 5–15× real-time    |
-| Video + CEF HTML templates  | ~1× real-time*     |
-| Video + Ultralight templates| 2–3× real-time     |
+Measured in Docker on macOS (software GL, 720p25). Native Linux with GPU
+will be significantly faster.
 
-\* CEF renders asynchronously at wall-clock speed, limiting offline throughput.
-See [Ultralight HTML Producer](ultralight-producer.md) for the synchronous alternative.
+| Scenario                     | Speed  | Deterministic |
+|------------------------------|--------|---------------|
+| Video only (offline)         | ~17x   | Yes           |
+| Video + Ultralight (offline) | ~2x    | Yes (500/500) |
+| Video + CEF (offline)        | ~17x   | No*           |
+
+\* CEF renders asynchronously at wall-clock speed. In offline mode the channel
+ticks faster, so CEF frames are duplicated/skipped. Use Ultralight for
+frame-accurate offline rendering. See [Ultralight HTML Producer](ultralight-producer.md).
 
 ## Source files
 
