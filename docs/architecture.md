@@ -29,6 +29,7 @@ CasparCG Server is organised into six top-level source directories, each with a
 well-defined responsibility boundary.
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter' }}}%%
 graph TD
     classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
     classDef moduleNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
@@ -121,7 +122,7 @@ Every video channel runs a continuous frame production loop. Each tick of the
 loop produces one output frame by pulling data through the pipeline.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'actorBkg': '#0055FF', 'actorTextColor': '#FFF', 'actorBorder': '#0055FF', 'activationBkgColor': '#E8F0FE', 'activationBorderColor': '#0055FF', 'signalColor': '#333', 'signalTextColor': '#333', 'noteBkgColor': '#FFF9E6', 'noteBorderColor': '#CC9900', 'noteTextColor': '#333', 'loopTextColor': '#0055FF' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'actorBkg': '#0055FF', 'actorTextColor': '#FFF', 'actorBorder': '#0055FF', 'activationBkgColor': '#E8F0FE', 'activationBorderColor': '#0055FF', 'signalColor': '#333', 'signalTextColor': '#333', 'noteBkgColor': '#FFF9E6', 'noteBorderColor': '#CC9900', 'noteTextColor': '#333', 'loopTextColor': '#0055FF', 'fontFamily': 'Inter' }}}%%
 sequenceDiagram
     participant S as Stage (Layers)
     participant P as frame_producer
@@ -172,6 +173,7 @@ CasparCG uses dedicated threads for different subsystems to avoid blocking
 the frame pipeline.
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter' }}}%%
 graph LR
     classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
     classDef moduleNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
@@ -254,6 +256,7 @@ AMCP (Advanced Media Control Protocol) is the primary control interface. Clients
 connect via TCP and send text commands.
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter' }}}%%
 flowchart TD
     classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
     classDef protoNode fill:#555,color:#FFF,stroke:#333,stroke-width:2px
@@ -304,6 +307,7 @@ Modules are the plugin mechanism for producers and consumers. Each module
 registers its factories at startup via dependency injection.
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter' }}}%%
 flowchart TB
     classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
     classDef moduleNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
@@ -365,6 +369,7 @@ The accelerator provides GPU-based frame compositing via OpenGL. It is
 decoupled from the core through the `image_mixer` interface.
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter' }}}%%
 flowchart TB
     classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
     classDef gpuNode fill:#7B5EA7,color:#FFF,stroke:#7B5EA7,stroke-width:2px
@@ -497,7 +502,7 @@ This is one of the most important architectural concepts in CasparCG and is
 critical to understanding offline rendering.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'actorBkg': '#0055FF', 'actorTextColor': '#FFF', 'actorBorder': '#0055FF', 'activationBkgColor': '#E8F0FE', 'activationBorderColor': '#0055FF', 'signalColor': '#333', 'signalTextColor': '#333', 'noteBkgColor': '#FFF9E6', 'noteBorderColor': '#CC9900', 'noteTextColor': '#333' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'actorBkg': '#0055FF', 'actorTextColor': '#FFF', 'actorBorder': '#0055FF', 'activationBkgColor': '#E8F0FE', 'activationBorderColor': '#0055FF', 'signalColor': '#333', 'signalTextColor': '#333', 'noteBkgColor': '#FFF9E6', 'noteBorderColor': '#CC9900', 'noteTextColor': '#333', 'fontFamily': 'Inter' }}}%%
 sequenceDiagram
     participant O as Output
     participant DL as Decklink Consumer
@@ -622,6 +627,7 @@ constraints. The channel pipeline runs as fast as the CPU and GPU allow,
 throttled only by backpressure from a bounded frame queue.
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter' }}}%%
 flowchart TB
     classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
     classDef moduleNode fill:#1AAF1A,color:#FFF,stroke:#148F14,stroke-width:2px
@@ -658,6 +664,7 @@ frame drift. Ultralight provides a synchronous rendering API where one call
 to `receive_impl()` produces exactly one fresh frame.
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Inter' }}}%%
 flowchart TD
     classDef coreNode fill:#0055FF,color:#FFF,stroke:#003CC0,stroke-width:2px
     classDef cefNode fill:#888,color:#FFF,stroke:#666,stroke-width:2px
@@ -710,7 +717,7 @@ template compatibility details, and known limitations.
 The offline consumer and Ultralight producer are designed to work together:
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'actorBkg': '#0055FF', 'actorTextColor': '#FFF', 'actorBorder': '#0055FF', 'activationBkgColor': '#E8F0FE', 'activationBorderColor': '#0055FF', 'signalColor': '#333', 'signalTextColor': '#333', 'noteBkgColor': '#FFF9E6', 'noteBorderColor': '#CC9900', 'noteTextColor': '#333', 'loopTextColor': '#1AAF1A' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'actorBkg': '#0055FF', 'actorTextColor': '#FFF', 'actorBorder': '#0055FF', 'activationBkgColor': '#E8F0FE', 'activationBorderColor': '#0055FF', 'signalColor': '#333', 'signalTextColor': '#333', 'noteBkgColor': '#FFF9E6', 'noteBorderColor': '#CC9900', 'noteTextColor': '#333', 'loopTextColor': '#1AAF1A', 'fontFamily': 'Inter' }}}%%
 sequenceDiagram
     participant A as AMCP Client
     participant CH as Channel
