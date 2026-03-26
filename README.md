@@ -36,12 +36,15 @@ window.__caspar_producer // 'cef' or 'ultralight'
 
 Tested in Docker on macOS (software GL). Native Linux with GPU will be faster.
 
-| Configuration           | Speed   |
-|-------------------------|---------|
-| Video only (offline)    | ~17x    |
-| Video + Ultralight      | ~2x     |
-| Video + CEF             | ~17x    |
-| Precise render accuracy | 500/500 |
+| Configuration              | Speed | Deterministic |
+|----------------------------|-------|---------------|
+| Video only (offline)       | ~17x  | Yes           |
+| Video + Ultralight         | ~2x   | Yes (500/500) |
+| Video + CEF (offline)      | ~17x  | No*           |
+
+*CEF renders asynchronously at wall-clock speed (~25fps). In offline mode the
+channel ticks faster, so CEF frames are duplicated/skipped. Use Ultralight
+for frame-accurate offline rendering.*
 
 ## Repository structure
 
