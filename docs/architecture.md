@@ -30,13 +30,13 @@ well-defined responsibility boundary.
 
 ```mermaid
 graph TD
-    SHELL[shell/ Config + Bootstrap]
-    AMCP[protocol/ AMCP + OSC]
+    SHELL["**shell/** Config + Bootstrap"]
+    AMCP["**protocol/** AMCP + OSC"]
 
     SHELL --> STAGE
     AMCP --> STAGE
 
-    subgraph producers["Producers modules/"]
+    subgraph producers["Producers **modules/**"]
         FFPROD[FFmpeg]
         HTMLPROD[HTML / CEF]
         ULPROD[Ultralight]
@@ -45,12 +45,12 @@ graph TD
 
     producers --> STAGE
 
-    STAGE[core/stage Layers]
-    STAGE --> MIXER[core/mixer]
-    MIXER --> OGL[accelerator/ ogl::device + image_mixer]
-    OGL --> OUTPUT[core/output]
+    STAGE["**core/** stage — Layers"]
+    STAGE --> MIXER["**core/** mixer"]
+    MIXER --> OGL["**accelerator/** ogl::device + image_mixer"]
+    OGL --> OUTPUT["**core/** output"]
 
-    subgraph consumers["Consumers modules/"]
+    subgraph consumers["Consumers **modules/**"]
         FFCONS[FFmpeg file]
         OFFCONS[Offline]
         DECK[Decklink SDI]
